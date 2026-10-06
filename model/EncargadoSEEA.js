@@ -41,9 +41,7 @@ class EncargadoSEEA extends Usuario {
             return false;
         }
 
-        solicitud.aprobar();
-
-        return true;
+        return solicitud.aprobar();
     }
 
 
@@ -53,9 +51,7 @@ class EncargadoSEEA extends Usuario {
             return false;
         }
 
-        solicitud.rechazar();
-
-        return true;
+        return solicitud.rechazar();
     }
 
 
@@ -65,9 +61,7 @@ class EncargadoSEEA extends Usuario {
             return false;
         }
 
-        solicitud.cancelar();
-
-        return true;
+        return solicitud.cancelar();
     }
 
 
@@ -81,9 +75,7 @@ class EncargadoSEEA extends Usuario {
             return false;
         }
 
-        horario.liberar();
-
-        return true;
+        return horario.liberar();
     }
 
 
@@ -93,9 +85,7 @@ class EncargadoSEEA extends Usuario {
             return false;
         }
 
-        horario.reservar();
-
-        return true;
+        return horario.reservar();
     }
 
 
