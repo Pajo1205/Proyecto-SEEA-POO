@@ -5,15 +5,14 @@ class Horario {
         this.fecha = fecha;
         this.horaInicio = horaInicio;
         this.horaFin = horaFin;
-
-        // Por defecto, un horario nuevo está disponible
         this.disponible = true;
+
+        if (!this.esValido()) {
+            throw new Error("El horario ingresado no es válido.");
+        }
     }
 
-
-    // =========================
     // GETTERS
-    // =========================
 
     getId() {
         return this.id;
@@ -35,104 +34,138 @@ class Horario {
         return this.disponible;
     }
 
-
-    // =========================
     // SETTERS
-    // =========================
 
     setFecha(fecha) {
-        this.fecha = fecha;
+        return this.modificarHorario(
+            fecha,
+            this.horaInicio,
+            this.horaFin
+        );
     }
 
     setHoraInicio(horaInicio) {
-        this.horaInicio = horaInicio;
+        return this.modificarHorario(
+            this.fecha,
+            horaInicio,
+            this.horaFin
+        );
     }
 
     setHoraFin(horaFin) {
-        this.horaFin = horaFin;
+        return this.modificarHorario(
+            this.fecha,
+            this.horaInicio,
+            horaFin
+        );
     }
 
-    setDisponible(disponible) {
-        this.disponible = disponible;
+    // VALIDACIONES
+
+    esValido() {
+        const fechaValida =
+            typeof this.fecha === "string" &&
+            /^\d{4}-\d{2}-\d{2}$/.test(this.fecha) &&
+            !Number.isNaN(Date.parse(this.fecha)) &&
+            new Date(this.fecha + "T00:00:00Z")
+                .toISOString().slice(0, 10) === this.fecha;
+
+        const horaValida = hora =>
+            typeof hora === "string" &&
+            /^([01]\d|2[0-3]):[0-5]\d$/.test(hora);
+
+        return fechaValida &&
+            horaValida(this.horaInicio) &&
+            horaValida(this.horaFin) &&
+            this.horaInicio < this.horaFin;
     }
-
-
-    // =========================
-    // DISPONIBILIDAD
-    // =========================
 
     estaDisponible() {
         return this.disponible;
     }
 
+    // RESERVAS
 
     reservar() {
-
         if (!this.disponible) {
             return false;
         }
 
         this.disponible = false;
-
         return true;
     }
 
-
     liberar() {
-
         if (this.disponible) {
             return false;
         }
 
         this.disponible = true;
-
         return true;
     }
 
+    // COMPARACIÓN DE HORARIOS
 
-    // =========================
+    coincideCon(otroHorario) {
+        if (otroHorario == null) {
+            return false;
+        }
+
+        return this.fecha === otroHorario.getFecha() &&
+            this.horaInicio === otroHorario.getHoraInicio() &&
+            this.horaFin === otroHorario.getHoraFin();
+    }
+
+    seTraslapaCon(otroHorario) {
+        if (otroHorario == null) {
+            return false;
+        }
+
+        if (this.fecha !== otroHorario.getFecha()) {
+            return false;
+        }
+
+        return (
+            this.horaInicio < otroHorario.getHoraFin() &&
+            this.horaFin > otroHorario.getHoraInicio()
+        );
+    }
+
     // MODIFICAR HORARIO
-    // =========================
 
     modificarHorario(fecha, horaInicio, horaFin) {
+        if (!this.disponible) {
+            return false;
+        }
+
+        const anterior = {
+            fecha: this.fecha,
+            inicio: this.horaInicio,
+            fin: this.horaFin
+        };
 
         this.fecha = fecha;
         this.horaInicio = horaInicio;
         this.horaFin = horaFin;
 
-        return true;
-    }
-
-
-    // =========================
-    // COMPARAR HORARIOS
-    // =========================
-
-    coincideCon(otroHorario) {
-
-        if (otroHorario == null) {
+        if (!this.esValido()) {
+            this.fecha = anterior.fecha;
+            this.horaInicio = anterior.inicio;
+            this.horaFin = anterior.fin;
             return false;
         }
 
-        return (
-            this.fecha === otroHorario.getFecha() &&
-            this.horaInicio === otroHorario.getHoraInicio() &&
-            this.horaFin === otroHorario.getHoraFin()
-        );
+        return true;
     }
 
-
-    // =========================
     // TO STRING
-    // =========================
 
     toString() {
-
         return `Horario:
 ID: ${this.id}
 Fecha: ${this.fecha}
-Hora de inicio: ${this.horaInicio}
-Hora de finalización: ${this.horaFin}
+Inicio: ${this.horaInicio}
+Fin: ${this.horaFin}
 Disponible: ${this.disponible ? "Sí" : "No"}`;
     }
 }
