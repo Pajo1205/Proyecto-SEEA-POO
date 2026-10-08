@@ -1,11 +1,8 @@
 class Visita {
 
     constructor(id, solicitud) {
-
         if (solicitud == null) {
-            throw new Error(
-                "La visita necesita una solicitud."
-            );
+            throw new Error("La visita necesita una solicitud.");
         }
 
         if (!solicitud.estaAprobada()) {
@@ -15,22 +12,14 @@ class Visita {
         }
 
         this.id = id;
-
         this.solicitud = solicitud;
-
         this.actividades = [];
-
-        this.voluntarios = [];
-
+        this.asignaciones = [];
         this.estado = "PROGRAMADA";
-
         this.observaciones = "";
     }
 
-
-    // =========================
     // GETTERS
-    // =========================
 
     getId() {
         return this.id;
@@ -44,8 +33,8 @@ class Visita {
         return this.actividades;
     }
 
-    getVoluntarios() {
-        return this.voluntarios;
+    getAsignaciones() {
+        return this.asignaciones;
     }
 
     getEstado() {
@@ -56,98 +45,106 @@ class Visita {
         return this.observaciones;
     }
 
-
-    // =========================
     // SETTERS
-    // =========================
 
     setObservaciones(observaciones) {
         this.observaciones = observaciones;
     }
 
-
-    // =========================
     // ACTIVIDADES
-    // =========================
 
     agregarActividad(actividad) {
-
         if (actividad == null) {
             return false;
         }
 
-        this.actividades.push(actividad);
+        if (this.actividades.some(a => a.getId() === actividad.getId())) {
+            return false;
+        }
 
+        this.actividades.push(actividad);
         return true;
     }
 
-
     eliminarActividad(actividad) {
+        if (actividad == null) {
+            return false;
+        }
 
-        const posicion =
-            this.actividades.indexOf(actividad);
+        const posicion = this.actividades.findIndex(
+            a => a.getId() === actividad.getId()
+        );
 
         if (posicion === -1) {
             return false;
         }
 
         this.actividades.splice(posicion, 1);
-
         return true;
     }
 
+    // ASIGNACIONES
 
-    // =========================
-    // VOLUNTARIOS
-    // =========================
-
-    agregarVoluntario(voluntario) {
-
-        if (voluntario == null) {
+    agregarAsignacion(asignacion) {
+        if (asignacion == null) {
             return false;
         }
 
-        if (this.voluntarios.includes(voluntario)) {
+        if (this.estado !== "PROGRAMADA") {
             return false;
         }
 
-        this.voluntarios.push(voluntario);
+        // Comprobar que la asignación pertenece a esta visita
+        if (asignacion.getVisita().getId() !== this.id) {
+            return false;
+        }
 
+        if (asignacion.getEstado() !== "CONFIRMADA") {
+            return false;
+        }
+
+        const voluntario = asignacion.getVoluntario();
+
+        if (!voluntario.puedeInscribirse(this)) {
+            return false;
+        }
+
+        // Evitar IDs de asignación duplicados
+        if (this.asignaciones.some(
+            a => a.getId() === asignacion.getId()
+        )) {
+            return false;
+        }
+
+        this.asignaciones.push(asignacion);
         return true;
     }
 
-
-    eliminarVoluntario(voluntario) {
-
-        const posicion =
-            this.voluntarios.indexOf(voluntario);
-
-        if (posicion === -1) {
+    eliminarAsignacion(asignacion) {
+        if (asignacion == null) {
             return false;
         }
 
-        this.voluntarios.splice(posicion, 1);
+        const encontrada = this.asignaciones.find(
+            a => a.getId() === asignacion.getId()
+        );
 
-        return true;
+        if (!encontrada) {
+            return false;
+        }
+
+        // Conservamos el registro y cambiamos su estado
+        return encontrada.cancelar();
     }
 
-
-    // =========================
     // CÁLCULO DE VOLUNTARIOS
-    // =========================
 
     calcularVoluntariosNecesarios() {
+        const estudiantes = this.solicitud.getCantidadEstudiantes();
 
-        const estudiantes =
-            this.solicitud.getCantidadEstudiantes();
+        let necesarios = Math.ceil(estudiantes / 10);
 
-        let necesarios =
-            Math.ceil(estudiantes / 10);
-
-        /*
-         * Para grupos grandes dejamos
-         * un voluntario adicional de respaldo.
-         */
+        // Regla provisional: respaldo para grupos de 30 o más
         if (estudiantes >= 30) {
             necesarios++;
         }
@@ -155,68 +152,64 @@ class Visita {
         return necesarios;
     }
 
-
-    tieneVoluntariosSuficientes() {
-
-        return (
-            this.voluntarios.length >=
-            this.calcularVoluntariosNecesarios()
-        );
+    contarVoluntariosConfirmados() {
+        return this.asignaciones.filter(
+            asignacion => asignacion.getEstado() === "CONFIRMADA"
+        ).length;
     }
 
+    tieneVoluntariosSuficientes() {
+        return this.contarVoluntariosConfirmados() >=
+               this.calcularVoluntariosNecesarios();
+    }
 
-    // =========================
-    // ESTADO DE LA VISITA
-    // =========================
+    // ESTADOS
 
     iniciar() {
-
         if (this.estado !== "PROGRAMADA") {
             return false;
         }
 
         this.estado = "EN_CURSO";
-
         return true;
     }
 
-
     finalizar() {
-
         if (this.estado !== "EN_CURSO") {
             return false;
         }
 
         this.estado = "FINALIZADA";
-
         return true;
     }
 
-
     cancelar() {
-
-        if (this.estado === "FINALIZADA") {
+        if (this.estado === "FINALIZADA" ||
+            this.estado === "CANCELADA") {
             return false;
         }
 
         this.estado = "CANCELADA";
 
+        // Cancelar asignaciones activas
+        this.asignaciones.forEach(asignacion => {
+            if (asignacion.estaActiva()) {
+                asignacion.cancelar();
+            }
+        });
+
         return true;
     }
 
-
-    // =========================
     // TO STRING
-    // =========================
 
     toString() {
-
         return `Visita:
 ID: ${this.id}
 Solicitud: ${this.solicitud.getId()}
 Estado: ${this.estado}
 Actividades: ${this.actividades.length}
-Voluntarios: ${this.voluntarios.length}
+Voluntarios confirmados: ${this.contarVoluntariosConfirmados()}
 Voluntarios necesarios: ${this.calcularVoluntariosNecesarios()}
 Observaciones: ${this.observaciones}`;
     }

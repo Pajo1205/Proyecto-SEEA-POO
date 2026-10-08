@@ -1,31 +1,16 @@
-const Usuario = require("./Modelo/Usuario");
+const Usuario = require("./Usuario");
 
 class Voluntario extends Usuario {
 
-    constructor(
-        id,
-        nombre,
-        correo,
-        contrasena,
-        carnet,
-        carrera
-    ) {
-
-        // Atributos heredados de Usuario
+    constructor(id, nombre, correo, contrasena, carnet, carrera) {
         super(id, nombre, correo, contrasena);
 
-        // Atributos propios
         this.carnet = carnet;
         this.carrera = carrera;
-
-        // Disponibilidades del voluntario
         this.disponibilidades = [];
     }
 
-
-    // =========================
     // GETTERS
-    // =========================
 
     getCarnet() {
         return this.carnet;
@@ -39,10 +24,7 @@ class Voluntario extends Usuario {
         return this.disponibilidades;
     }
 
-
-    // =========================
     // SETTERS
-    // =========================
 
     setCarnet(carnet) {
         this.carnet = carnet;
@@ -52,88 +34,84 @@ class Voluntario extends Usuario {
         this.carrera = carrera;
     }
 
-
-    // =========================
     // DISPONIBILIDAD
-    // =========================
 
     agregarDisponibilidad(disponibilidad) {
-
         if (disponibilidad == null) {
             return false;
         }
 
-        this.disponibilidades.push(disponibilidad);
+        if (this.disponibilidades.includes(disponibilidad)) {
+            return false;
+        }
 
+        this.disponibilidades.push(disponibilidad);
         return true;
     }
 
-
     eliminarDisponibilidad(disponibilidad) {
-
-        const posicion =
-            this.disponibilidades.indexOf(disponibilidad);
+        const posicion = this.disponibilidades.indexOf(disponibilidad);
 
         if (posicion === -1) {
             return false;
         }
 
         this.disponibilidades.splice(posicion, 1);
-
         return true;
     }
 
-
     estaDisponible(horario) {
-
         if (horario == null) {
             return false;
         }
 
         return this.disponibilidades.some(
-            disponibilidad =>
-                disponibilidad.coincideCon(horario)
+            disponibilidad => disponibilidad.coincideCon(horario)
         );
     }
 
-
-    // =========================
     // VISITAS
-    // =========================
 
-    inscribirseVisita(visita) {
-
+    puedeInscribirse(visita) {
         if (visita == null) {
             return false;
         }
 
-        const horario =
-            visita.getSolicitud().getHorario();
+        if (visita.getEstado() !== "PROGRAMADA") {
+            return false;
+        }
+
+        const horario = visita.getSolicitud().getHorario();
 
         if (!this.estaDisponible(horario)) {
             return false;
         }
 
-        return visita.agregarVoluntario(this);
+        // Verificar que no esté inscrito actualmente
+        const yaInscrito = visita.getAsignaciones().some(
+            asignacion =>
+                asignacion.getVoluntario().getId() === this.id &&
+                asignacion.getEstado() === "CONFIRMADA"
+        );
+
+        return !yaInscrito;
     }
 
-
-    cancelarParticipacion(visita) {
-
-        if (visita == null) {
+    cancelarParticipacion(asignacion) {
+        if (asignacion == null) {
             return false;
         }
 
-        return visita.eliminarVoluntario(this);
+        if (asignacion.getVoluntario().getId() !== this.id) {
+            return false;
+        }
+
+        return asignacion.cancelar();
     }
 
-
-    // =========================
     // TO STRING
-    // =========================
 
     toString() {
-
         return `Voluntario:
 ID: ${this.id}
 Nombre: ${this.nombre}
