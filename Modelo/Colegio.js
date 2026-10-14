@@ -1,14 +1,6 @@
 class Colegio {
 
-    constructor(
-        id,
-        nombre,
-        direccion,
-        telefono,
-        correo,
-        aliado
-    ) {
-
+    constructor(id, nombre, direccion, telefono, correo, aliado) {
         this.id = id;
         this.nombre = nombre;
         this.direccion = direccion;

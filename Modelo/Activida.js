@@ -1,14 +1,6 @@
 class Actividad {
 
-    constructor(
-        id,
-        nombre,
-        tipo,
-        descripcion,
-        duracionMinutos,
-        capacidadMaxima
-    ) {
-
+    constructor(id, nombre, tipo, descripcion, duracionMinutos, capacidadMaxima) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
