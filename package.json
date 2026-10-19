@@ -1,0 +1,13 @@
+{
+  "name": "proyecto-seea-poo",
+  "version": "1.0.0",
+  "description": "Sistema SEEA",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "express": "^4.21.2"
+  }
+}

@@ -1,5 +1,6 @@
 
 const express = require("express");
+const path = require("path");
 
 // ======================================
 // CREAR APLICACION EXPRESS
@@ -32,9 +33,7 @@ const voluntarioController = require("./controller/voluntarioController");
 // ======================================
 
 app.get("/", (req, res) => {
-    res.status(200).json({
-        mensaje: "API del Sistema SEEA funcionando correctamente"
-    });
+    res.sendFile(path.join(__dirname, "view", "BrowserView.html"));
 });
 
 // ======================================
@@ -229,11 +228,15 @@ app.use((err, req, res, next) => {
 // INICIAR SERVIDOR
 // ======================================
 
-app.listen(PORT, () => {
-    console.log("==================================");
-    console.log("   SISTEMA SEEA - SERVIDOR");
-    console.log("==================================");
-    console.log(`Servidor funcionando en puerto ${PORT}`);
-    console.log(`URL: http://localhost:${PORT}`);
-    console.log("Esperando peticiones...");
-});
+module.exports = app;
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log("==================================");
+        console.log("   SISTEMA SEEA - SERVIDOR");
+        console.log("==================================");
+        console.log(`Servidor funcionando en puerto ${PORT}`);
+        console.log(`URL: http://localhost:${PORT}`);
+        console.log("Esperando peticiones...");
+    });
+}
