@@ -1,4 +1,4 @@
-const Usuario = require("./Modelo/Usuario");
+const Usuario = require("./Usuario");
 
 class UsuarioColegio extends Usuario {
 
@@ -67,7 +67,7 @@ class UsuarioColegio extends Usuario {
             return null;
         }
 
-        const Solicitud = require("./Modelo/Solicitud");
+        const Solicitud = require("./Solicitud");
 
         const solicitud = new Solicitud(
             id,
