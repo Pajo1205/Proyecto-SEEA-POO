@@ -1,6 +1,14 @@
+
 class Actividad {
 
-    constructor(id, nombre, tipo, descripcion, duracionMinutos, capacidadMaxima) {
+    constructor(
+        id,
+        nombre,
+        tipo,
+        descripcion,
+        duracionMinutos,
+        capacidadMaxima
+    ) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
@@ -9,10 +17,7 @@ class Actividad {
         this.capacidadMaxima = capacidadMaxima;
     }
 
-
-    // =========================
     // GETTERS
-    // =========================
 
     getId() {
         return this.id;
@@ -38,17 +43,19 @@ class Actividad {
         return this.capacidadMaxima;
     }
 
-
-    // =========================
     // SETTERS
-    // =========================
 
     setNombre(nombre) {
         this.nombre = nombre;
     }
 
     setTipo(tipo) {
+        if (!["TOUR", "CHARLA", "TALLER"].includes(tipo)) {
+            return false;
+        }
+
         this.tipo = tipo;
+        return true;
     }
 
     setDescripcion(descripcion) {
@@ -56,31 +63,24 @@ class Actividad {
     }
 
     setDuracionMinutos(duracionMinutos) {
-
         if (duracionMinutos <= 0) {
             return false;
         }
 
         this.duracionMinutos = duracionMinutos;
-
         return true;
     }
 
     setCapacidadMaxima(capacidadMaxima) {
-
         if (capacidadMaxima <= 0) {
             return false;
         }
 
         this.capacidadMaxima = capacidadMaxima;
-
         return true;
     }
 
-
-    // =========================
     // VALIDACIONES
-    // =========================
 
     esTour() {
         return this.tipo === "TOUR";
@@ -94,30 +94,21 @@ class Actividad {
         return this.tipo === "TALLER";
     }
 
-
     tieneCapacidad(cantidadEstudiantes) {
-
-        if (cantidadEstudiantes <= 0) {
-            return false;
-        }
-
-        return cantidadEstudiantes <= this.capacidadMaxima;
+        return cantidadEstudiantes > 0 &&
+               cantidadEstudiantes <= this.capacidadMaxima;
     }
 
-
-    // =========================
     // TO STRING
-    // =========================
 
     toString() {
-
         return `Actividad:
 ID: ${this.id}
 Nombre: ${this.nombre}
 Tipo: ${this.tipo}
-Descripción: ${this.descripcion}
-Duración: ${this.duracionMinutos} minutos
-Capacidad máxima: ${this.capacidadMaxima}`;
+Descripcion: ${this.descripcion}
+Duracion: ${this.duracionMinutos} minutos
+Capacidad maxima: ${this.capacidadMaxima}`;
     }
 }
 
