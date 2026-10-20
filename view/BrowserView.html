@@ -109,6 +109,10 @@
             <input type="checkbox" id="solicitud-taller" name="solicitaTaller">
         </p>
         <p>
+            <label for="solicitud-observaciones">Observaciones:</label>
+            <textarea id="solicitud-observaciones" name="observaciones"></textarea>
+        </p>
+        <p>
             <button type="submit">Guardar solicitud</button>
         </p>
     </form>
@@ -125,6 +129,9 @@
 
     <h3>Solicitudes</h3>
     <pre id="datos-solicitudes"></pre>
+
+    <h3>Acciones de solicitudes</h3>
+    <div id="acciones-solicitudes"></div>
 
     <script>
         function mensaje(texto) {
@@ -155,6 +162,55 @@
                 JSON.stringify(horarios, null, 2);
             document.getElementById("datos-solicitudes").textContent =
                 JSON.stringify(solicitudes, null, 2);
+
+            dibujarAcciones(solicitudes);
+        }
+
+        function dibujarAcciones(solicitudes) {
+            const contenedor = document.getElementById("acciones-solicitudes");
+            contenedor.innerHTML = "";
+
+            if (solicitudes.length === 0) {
+                contenedor.textContent = "no hay solicitudes";
+                return;
+            }
+
+            solicitudes.forEach(solicitud => {
+                const linea = document.createElement("p");
+                linea.textContent = `Solicitud #${solicitud.id} (${solicitud.estado}) `;
+
+                if (solicitud.estado === "PENDIENTE") {
+                    linea.appendChild(botonAccion(solicitud.id, "aprobar"));
+                    linea.appendChild(botonAccion(solicitud.id, "rechazar"));
+                }
+
+                if (solicitud.estado !== "CANCELADA" &&
+                    solicitud.estado !== "RECHAZADA" &&
+                    solicitud.estado !== "FINALIZADA") {
+                    linea.appendChild(botonAccion(solicitud.id, "cancelar"));
+                }
+
+                contenedor.appendChild(linea);
+            });
+        }
+
+        function botonAccion(id, accion) {
+            const boton = document.createElement("button");
+            boton.textContent = accion;
+            boton.addEventListener("click", () => ejecutarAccion(id, accion));
+            return boton;
+        }
+
+        async function ejecutarAccion(id, accion) {
+            const respuesta = await fetch(
+                `/solicitudes/${id}/${accion}`,
+                { method: "PATCH" }
+            );
+
+            const resultado = await respuesta.json();
+            mensaje(resultado.mensaje || "listo");
+
+            await cargarDatos();
         }
 
         document.getElementById("form-colegio")
@@ -192,7 +248,7 @@
                     solicitaTour: document.getElementById("solicitud-tour").checked,
                     solicitaCharla: document.getElementById("solicitud-charla").checked,
                     solicitaTaller: document.getElementById("solicitud-taller").checked,
-                    observaciones: ""
+                    observaciones: document.getElementById("solicitud-observaciones").value
                 });
             });
 
