@@ -13,7 +13,7 @@ function registrarColegio(req, res) {
             aliado
         } = req.body;
 
-        if (!nombre || typeof nombre !== "string") {
+        if (typeof nombre !== "string" || !nombre.trim()) {
             return res.status(400).json({
                 mensaje: "El nombre del colegio es obligatorio"
             });
@@ -26,13 +26,13 @@ function registrarColegio(req, res) {
         }
 
         const existe = datos.colegios.some(
-            colegio => colegio.getNombre().toLowerCase() ===
+            c => c.getNombre().toLowerCase() ===
                 nombre.trim().toLowerCase()
         );
 
         if (existe) {
             return res.status(409).json({
-                mensaje: "El colegio ya está registrado"
+                mensaje: "El colegio ya existe"
             });
         }
 
@@ -59,19 +59,19 @@ function registrarColegio(req, res) {
     }
 }
 
-// OBTENER TODOS LOS COLEGIOS
+// CONSULTAR COLEGIOS
 
 function obtenerColegios(req, res) {
     return res.status(200).json(datos.colegios);
 }
 
-// BUSCAR COLEGIO POR ID
+// BUSCAR COLEGIO
 
 function buscarColegio(req, res) {
     const id = Number(req.params.id);
 
     const colegio = datos.colegios.find(
-        colegio => colegio.getId() === id
+        c => c.getId() === id
     );
 
     if (!colegio) {
@@ -89,7 +89,7 @@ function actualizarColegio(req, res) {
     const id = Number(req.params.id);
 
     const colegio = datos.colegios.find(
-        colegio => colegio.getId() === id
+        c => c.getId() === id
     );
 
     if (!colegio) {
@@ -109,49 +109,82 @@ function actualizarColegio(req, res) {
     if (nombre !== undefined) {
         if (typeof nombre !== "string" || !nombre.trim()) {
             return res.status(400).json({
-                mensaje: "Nombre inválido"
+                mensaje: "Nombre invalido"
             });
         }
-        colegio.setNombre(nombre.trim());
+
+        const duplicado = datos.colegios.some(
+            c => c.getId() !== id &&
+                c.getNombre().toLowerCase() ===
+                nombre.trim().toLowerCase()
+        );
+
+        if (duplicado) {
+            return res.status(409).json({
+                mensaje: "Ya existe otro colegio con ese nombre"
+            });
+        }
     }
 
+    if (aliado !== undefined && typeof aliado !== "boolean") {
+        return res.status(400).json({
+            mensaje: "El campo aliado debe ser booleano"
+        });
+    }
+
+    if (nombre !== undefined) colegio.setNombre(nombre.trim());
     if (direccion !== undefined) colegio.setDireccion(direccion);
     if (telefono !== undefined) colegio.setTelefono(telefono);
     if (correo !== undefined) colegio.setCorreo(correo);
-
-    if (aliado !== undefined) {
-        if (typeof aliado !== "boolean") {
-            return res.status(400).json({
-                mensaje: "Aliado debe ser true o false"
-            });
-        }
-        colegio.setAliado(aliado);
-    }
+    if (aliado !== undefined) colegio.setAliado(aliado);
 
     return res.status(200).json({
-        mensaje: "Colegio actualizado",
+        mensaje: "Colegio actualizado correctamente",
         colegio
     });
 }
 
-function eliminarColegio(req, res) {
+// ELIMINAR COLEGIO
 
+function eliminarColegio(req, res) {
     const id = Number(req.params.id);
 
-    const indice = datos.colegios.findIndex(
-        colegio => colegio.getId() === id
+    const posicion = datos.colegios.findIndex(
+        c => c.getId() === id
     );
 
-    if (indice === -1) {
+    if (posicion === -1) {
         return res.status(404).json({
             mensaje: "Colegio no encontrado"
         });
     }
 
-    datos.colegios.splice(indice, 1);
+    const tieneSolicitudes = datos.solicitudes.some(
+        s => s.getColegio().getId() === id
+    );
+
+    if (tieneSolicitudes) {
+        return res.status(409).json({
+            mensaje: "No se puede eliminar un colegio con solicitudes"
+        });
+    }
+
+    const tieneUsuarios = datos.usuarios.some(
+        u => typeof u.getColegio === "function" &&
+            u.getColegio() &&
+            u.getColegio().getId() === id
+    );
+
+    if (tieneUsuarios) {
+        return res.status(409).json({
+            mensaje: "No se puede eliminar un colegio con usuarios asociados"
+        });
+    }
+
+    datos.colegios.splice(posicion, 1);
 
     return res.status(200).json({
-        mensaje: "Colegio eliminado"
+        mensaje: "Colegio eliminado correctamente"
     });
 }
 

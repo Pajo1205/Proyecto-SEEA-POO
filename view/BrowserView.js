@@ -9,19 +9,19 @@ function reproducirSonido(esVolver) {
 
 document.addEventListener("click", evento => {
     const boton = evento.target.closest("button");
+    if (!boton) return;
 
-    if (!boton) {
-        return;
-    }
-
-    const esVolver =
-        boton.classList.contains("volver-principal") ||
-        boton.classList.contains("volver-colegios") ||
-        boton.classList.contains("volver-horarios") ||
-        boton.classList.contains("volver-solicitudes");
+    const esVolver = [
+        "volver-principal",
+        "volver-colegios",
+        "volver-horarios",
+        "volver-solicitudes"
+    ].some(clase => boton.classList.contains(clase));
 
     reproducirSonido(esVolver);
 });
+
+// MOSTRAR SECCIONES
 
 function mostrar(id) {
     document.querySelectorAll(".seccion").forEach(seccion => {
@@ -29,56 +29,94 @@ function mostrar(id) {
     });
 }
 
+// MENSAJES
+
 let temporizadorMensaje = null;
 
 function mensaje(texto) {
     const elemento = document.getElementById("mensaje");
-    elemento.textContent = texto;
 
+    elemento.textContent = texto;
     clearTimeout(temporizadorMensaje);
 
     if (texto) {
         temporizadorMensaje = setTimeout(() => {
             elemento.textContent = "";
-        }, 3000);
+        }, 4000);
     }
 }
 
-async function enviar(url, datos) {
-    const respuesta = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(datos)
-    });
+// PETICIONES HTTP
 
+async function peticion(url, opciones = {}) {
+    const respuesta = await fetch(url, opciones);
     const resultado = await respuesta.json();
-    mensaje(resultado.mensaje || "listo");
 
-    await cargarDatos();
+    if (!respuesta.ok) {
+        throw new Error(
+            resultado.mensaje || "Error en la operacion"
+        );
+    }
+
+    return resultado;
 }
+
+async function enviar(url, datos) {
+    try {
+        const resultado = await peticion(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datos)
+        });
+
+        mensaje(resultado.mensaje || "Guardado correctamente");
+        await cargarDatos();
+        return true;
+
+    } catch (error) {
+        mensaje(error.message);
+        return false;
+    }
+}
+
+// CARGAR DATOS
 
 async function cargarDatos() {
-    const colegios = await fetch("/colegios").then(r => r.json());
-    const horarios = await fetch("/horarios").then(r => r.json());
-    const solicitudes = await fetch("/solicitudes").then(r => r.json());
+    try {
+        const [colegios, horarios, solicitudes] =
+            await Promise.all([
+                peticion("/colegios"),
+                peticion("/horarios"),
+                peticion("/solicitudes")
+            ]);
 
-    dibujarColegios(colegios);
-    dibujarHorarios(horarios);
-    dibujarSolicitudes(solicitudes);
+        dibujarColegios(colegios);
+        dibujarHorarios(horarios);
+        dibujarSolicitudes(solicitudes);
+
+        cargarSelectores(colegios, horarios);
+
+    } catch (error) {
+        mensaje("Error cargando datos: " + error.message);
+    }
 }
 
-function crearItem(texto, extra) {
+// CREAR ELEMENTOS DE LISTA
+
+function crearItem(texto, extra = null) {
     const item = document.createElement("li");
+
     item.className =
-        "list-group-item d-flex justify-content-between align-items-center gap-2 flex-wrap";
+        "list-group-item d-flex justify-content-between " +
+        "align-items-center gap-2 flex-wrap";
 
     const span = document.createElement("span");
     span.textContent = texto;
     item.appendChild(span);
 
-    if (extra) {
-        item.appendChild(extra);
-    }
+    if (extra) item.appendChild(extra);
 
     return item;
 }
@@ -90,193 +128,178 @@ function listaVacia(id, texto) {
     const item = document.createElement("li");
     item.className = "list-group-item";
     item.textContent = texto;
+
     lista.appendChild(item);
 }
+
+// MOSTRAR COLEGIOS
 
 function dibujarColegios(colegios) {
     const lista = document.getElementById("datos-colegios");
     lista.innerHTML = "";
 
     if (colegios.length === 0) {
-        return listaVacia("datos-colegios", "no hay colegios");
+        listaVacia("datos-colegios", "No hay colegios");
+        return;
     }
 
     colegios.forEach(colegio => {
         const texto =
-            `#${colegio.id} · ${colegio.nombre}` +
-            ` · ${colegio.direccion || "sin direccion"}` +
-            ` · ${colegio.telefono || "sin telefono"}` +
-            ` · ${colegio.correo || "sin correo"}`;
+            `#${colegio.id} - ${colegio.nombre} - ` +
+            `${colegio.direccion || "Sin direccion"} - ` +
+            `${colegio.telefono || "Sin telefono"}`;
 
         const badge = document.createElement("span");
+
         badge.className = "badge " +
-            (colegio.aliado ? "text-bg-primary" : "text-bg-secondary");
-        badge.textContent = colegio.aliado ? "Aliado" : "No aliado";
+            (colegio.aliado
+                ? "text-bg-primary"
+                : "text-bg-secondary");
+
+        badge.textContent =
+            colegio.aliado ? "Aliado" : "No aliado";
 
         lista.appendChild(crearItem(texto, badge));
     });
 }
+
+// MOSTRAR HORARIOS
 
 function dibujarHorarios(horarios) {
     const lista = document.getElementById("datos-horarios");
     lista.innerHTML = "";
 
     if (horarios.length === 0) {
-        return listaVacia("datos-horarios", "no hay horarios");
+        listaVacia("datos-horarios", "No hay horarios");
+        return;
     }
 
     horarios.forEach(horario => {
         const texto =
-            `#${horario.id} · ${horario.fecha}` +
-            ` · ${horario.horaInicio} - ${horario.horaFin}`;
+            `#${horario.id} - ${horario.fecha} - ` +
+            `${horario.horaInicio} a ${horario.horaFin}`;
 
         const badge = document.createElement("span");
+
         badge.className = "badge " +
-            (horario.disponible ? "text-bg-success" : "text-bg-danger");
-        badge.textContent = horario.disponible ? "Disponible" : "Ocupado";
+            (horario.disponible
+                ? "text-bg-success"
+                : "text-bg-danger");
+
+        badge.textContent =
+            horario.disponible ? "Disponible" : "Ocupado";
 
         lista.appendChild(crearItem(texto, badge));
     });
 }
+
+// MOSTRAR SOLICITUDES
 
 function dibujarSolicitudes(solicitudes) {
     const lista = document.getElementById("datos-solicitudes");
     lista.innerHTML = "";
 
     if (solicitudes.length === 0) {
-        return listaVacia("datos-solicitudes", "no hay solicitudes");
+        listaVacia("datos-solicitudes", "No hay solicitudes");
+        return;
     }
 
     solicitudes.forEach(solicitud => {
         const actividades = [
-            solicitud.solicitaTour ? "tour" : null,
-            solicitud.solicitaCharla ? "charla" : null,
-            solicitud.solicitaTaller ? "taller" : null
-        ].filter(Boolean).join(", ") || "sin actividades";
+            solicitud.solicitaTour ? "Tour" : null,
+            solicitud.solicitaCharla ? "Charla" : null,
+            solicitud.solicitaTaller ? "Taller" : null
+        ].filter(Boolean).join(", ");
 
         const texto =
-            `#${solicitud.id} · ${solicitud.colegio.nombre}` +
-            ` · ${solicitud.horario.fecha} ` +
-            `${solicitud.horario.horaInicio}-${solicitud.horario.horaFin}` +
-            ` · ${actividades} · ${solicitud.estado}`;
+            `#${solicitud.id} - ${solicitud.colegio.nombre} - ` +
+            `${solicitud.horario.fecha} - ` +
+            `${actividades} - ${solicitud.estado}`;
 
         const acciones = document.createElement("span");
         acciones.className = "d-flex gap-2";
 
         if (solicitud.estado === "PENDIENTE") {
-            acciones.appendChild(botonAccion(solicitud.id, "aprobar"));
-            acciones.appendChild(botonAccion(solicitud.id, "rechazar"));
+            acciones.appendChild(
+                botonAccion(solicitud.id, "aprobar")
+            );
+
+            acciones.appendChild(
+                botonAccion(solicitud.id, "rechazar")
+            );
         }
 
-        if (solicitud.estado !== "CANCELADA" &&
+        if (
+            solicitud.estado !== "CANCELADA" &&
             solicitud.estado !== "RECHAZADA" &&
-            solicitud.estado !== "FINALIZADA") {
-            acciones.appendChild(botonAccion(solicitud.id, "cancelar"));
+            solicitud.estado !== "FINALIZADA"
+        ) {
+            acciones.appendChild(
+                botonAccion(solicitud.id, "cancelar")
+            );
         }
 
         lista.appendChild(crearItem(texto, acciones));
     });
 }
 
-function dibujarEliminarColegios(colegios) {
-    const lista = document.getElementById("lista-eliminar-colegios");
-    lista.innerHTML = "";
+// SELECTORES DEL FORMULARIO
 
-    if (colegios.length === 0) {
-        return listaVacia("lista-eliminar-colegios", "no hay colegios");
-    }
+function cargarSelectores(colegios, horarios) {
+    const selectColegio =
+        document.getElementById("solicitud-colegio");
+
+    const selectHorario =
+        document.getElementById("solicitud-horario");
+
+    const colegioSeleccionado = selectColegio.value;
+    const horarioSeleccionado = selectHorario.value;
+
+    selectColegio.innerHTML =
+        '<option value="">Seleccione un colegio</option>';
+
+    selectHorario.innerHTML =
+        '<option value="">Seleccione un horario</option>';
 
     colegios.forEach(colegio => {
-        const texto = `#${colegio.id} · ${colegio.nombre}`;
-        lista.appendChild(
-            crearItem(texto, botonEliminar("colegios", colegio.id))
-        );
-    });
-}
+        const opcion = document.createElement("option");
 
-function dibujarEliminarHorarios(horarios) {
-    const lista = document.getElementById("lista-eliminar-horarios");
-    lista.innerHTML = "";
+        opcion.value = colegio.id;
+        opcion.textContent = colegio.nombre;
 
-    if (horarios.length === 0) {
-        return listaVacia("lista-eliminar-horarios", "no hay horarios");
-    }
-
-    horarios.forEach(horario => {
-        const texto =
-            `#${horario.id} · ${horario.fecha}` +
-            ` · ${horario.horaInicio} - ${horario.horaFin}`;
-        lista.appendChild(
-            crearItem(texto, botonEliminar("horarios", horario.id))
-        );
-    });
-}
-
-function dibujarEliminarSolicitudes(solicitudes) {
-    const lista = document.getElementById("lista-eliminar-solicitudes");
-    lista.innerHTML = "";
-
-    if (solicitudes.length === 0) {
-        return listaVacia("lista-eliminar-solicitudes", "no hay solicitudes");
-    }
-
-    solicitudes.forEach(solicitud => {
-        const texto =
-            `#${solicitud.id} · ${solicitud.colegio.nombre}` +
-            ` · ${solicitud.horario.fecha}` +
-            ` · ${solicitud.estado}`;
-        lista.appendChild(
-            crearItem(texto, botonEliminar("solicitudes", solicitud.id))
-        );
-    });
-}
-
-function botonEliminar(recurso, id) {
-    const boton = document.createElement("button");
-    boton.type = "button";
-    boton.className = "btn btn-danger btn-sm";
-    boton.textContent = "Eliminar";
-    boton.addEventListener("click", () => eliminar(recurso, id));
-    return boton;
-}
-
-async function eliminar(recurso, id) {
-    const nombres = {
-        colegios: "colegio",
-        horarios: "horario",
-        solicitudes: "solicitud"
-    };
-
-    if (!confirm(`¿Eliminar ${nombres[recurso]} #${id}?`)) {
-        return;
-    }
-
-    const respuesta = await fetch(`/${recurso}/${id}`, {
-        method: "DELETE"
+        selectColegio.appendChild(opcion);
     });
 
-    const resultado = await respuesta.json();
-    mensaje(resultado.mensaje || "listo");
+    horarios
+        .filter(h => h.disponible)
+        .forEach(horario => {
+            const opcion = document.createElement("option");
 
-    await cargarDatos();
-    await refrescarEliminar(recurso);
-}
+            opcion.value = horario.id;
+            opcion.textContent =
+                `${horario.fecha} - ` +
+                `${horario.horaInicio} a ${horario.horaFin}`;
 
-async function refrescarEliminar(recurso) {
-    if (recurso === "colegios") {
-        const colegios = await fetch("/colegios").then(r => r.json());
-        dibujarEliminarColegios(colegios);
-    } else if (recurso === "horarios") {
-        const horarios = await fetch("/horarios").then(r => r.json());
-        dibujarEliminarHorarios(horarios);
-    } else {
-        const solicitudes = await fetch("/solicitudes").then(r => r.json());
-        dibujarEliminarSolicitudes(solicitudes);
+            selectHorario.appendChild(opcion);
+        });
+
+    selectColegio.value = colegioSeleccionado;
+    selectHorario.value = horarioSeleccionado;
+
+    if (selectColegio.selectedIndex === -1) {
+        selectColegio.value = "";
+    }
+
+    if (selectHorario.selectedIndex === -1) {
+        selectHorario.value = "";
     }
 }
+
+// BOTONES DE ACCIONES
 
 function botonAccion(id, accion) {
     const boton = document.createElement("button");
+
     boton.type = "button";
     boton.textContent = accion;
 
@@ -286,134 +309,296 @@ function botonAccion(id, accion) {
         cancelar: "btn btn-warning btn-sm"
     };
 
-    boton.className = estilos[accion] || "btn btn-secondary btn-sm";
-    boton.addEventListener("click", () => ejecutarAccion(id, accion));
+    boton.className = estilos[accion];
+
+    boton.addEventListener("click", () => {
+        ejecutarAccion(id, accion);
+    });
+
     return boton;
 }
 
 async function ejecutarAccion(id, accion) {
-    const respuesta = await fetch(
-        `/solicitudes/${id}/${accion}`,
-        { method: "PATCH" }
-    );
+    try {
+        const resultado = await peticion(
+            `/solicitudes/${id}/${accion}`,
+            { method: "PATCH" }
+        );
 
-    const resultado = await respuesta.json();
-    mensaje(resultado.mensaje || "listo");
+        mensaje(resultado.mensaje);
+        await cargarDatos();
 
-    await cargarDatos();
+    } catch (error) {
+        mensaje(error.message);
+    }
 }
 
-document.getElementById("ir-colegios")
-    .addEventListener("click", () => mostrar("menu-colegios"));
+// BOTONES DE ELIMINACION
 
-document.getElementById("ir-horarios")
-    .addEventListener("click", () => mostrar("menu-horarios"));
+function botonEliminar(recurso, id) {
+    const boton = document.createElement("button");
 
-document.getElementById("ir-solicitudes")
-    .addEventListener("click", () => mostrar("menu-solicitudes"));
+    boton.type = "button";
+    boton.className = "btn btn-danger btn-sm";
+    boton.textContent = "Eliminar";
 
-document.getElementById("ir-crear-colegio")
-    .addEventListener("click", () => mostrar("crear-colegio"));
+    boton.addEventListener("click", () => {
+        eliminar(recurso, id);
+    });
 
-document.getElementById("ir-ver-colegios")
-    .addEventListener("click", async () => {
+    return boton;
+}
+
+async function eliminar(recurso, id) {
+    if (!confirm(`Eliminar ${recurso} #${id}?`)) {
+        return;
+    }
+
+    try {
+        const resultado = await peticion(
+            `/${recurso}/${id}`,
+            { method: "DELETE" }
+        );
+
+        mensaje(resultado.mensaje);
         await cargarDatos();
-        mostrar("ver-colegios");
+        await refrescarEliminar(recurso);
+
+    } catch (error) {
+        mensaje(error.message);
+    }
+}
+
+// LISTAS DE ELIMINACION
+
+function dibujarEliminarColegios(colegios) {
+    const lista =
+        document.getElementById("lista-eliminar-colegios");
+
+    lista.innerHTML = "";
+
+    if (colegios.length === 0) {
+        listaVacia("lista-eliminar-colegios", "No hay colegios");
+        return;
+    }
+
+    colegios.forEach(colegio => {
+        lista.appendChild(
+            crearItem(
+                `#${colegio.id} - ${colegio.nombre}`,
+                botonEliminar("colegios", colegio.id)
+            )
+        );
     });
+}
 
-document.getElementById("ir-crear-horario")
-    .addEventListener("click", () => mostrar("crear-horario"));
+function dibujarEliminarHorarios(horarios) {
+    const lista =
+        document.getElementById("lista-eliminar-horarios");
 
-document.getElementById("ir-ver-horarios")
-    .addEventListener("click", async () => {
-        await cargarDatos();
-        mostrar("ver-horarios");
+    lista.innerHTML = "";
+
+    if (horarios.length === 0) {
+        listaVacia("lista-eliminar-horarios", "No hay horarios");
+        return;
+    }
+
+    horarios.forEach(horario => {
+        lista.appendChild(
+            crearItem(
+                `#${horario.id} - ${horario.fecha} - ` +
+                `${horario.horaInicio} a ${horario.horaFin}`,
+                botonEliminar("horarios", horario.id)
+            )
+        );
     });
+}
 
-document.getElementById("ir-crear-solicitud")
-    .addEventListener("click", () => mostrar("crear-solicitud"));
+function dibujarEliminarSolicitudes(solicitudes) {
+    const lista =
+        document.getElementById("lista-eliminar-solicitudes");
 
-document.getElementById("ir-gestionar-solicitudes")
-    .addEventListener("click", async () => {
-        await cargarDatos();
-        mostrar("gestionar-solicitudes");
+    lista.innerHTML = "";
+
+    if (solicitudes.length === 0) {
+        listaVacia(
+            "lista-eliminar-solicitudes",
+            "No hay solicitudes"
+        );
+        return;
+    }
+
+    solicitudes.forEach(solicitud => {
+        lista.appendChild(
+            crearItem(
+                `#${solicitud.id} - ` +
+                `${solicitud.colegio.nombre} - ` +
+                `${solicitud.estado}`,
+                botonEliminar("solicitudes", solicitud.id)
+            )
+        );
     });
+}
 
-document.getElementById("ir-eliminar-colegios")
-    .addEventListener("click", async () => {
-        const colegios = await fetch("/colegios").then(r => r.json());
-        dibujarEliminarColegios(colegios);
-        mostrar("eliminar-colegios");
-    });
+async function refrescarEliminar(recurso) {
+    try {
+        const datos = await peticion(`/${recurso}`);
 
-document.getElementById("ir-eliminar-horarios")
-    .addEventListener("click", async () => {
-        const horarios = await fetch("/horarios").then(r => r.json());
-        dibujarEliminarHorarios(horarios);
-        mostrar("eliminar-horarios");
-    });
+        if (recurso === "colegios") {
+            dibujarEliminarColegios(datos);
+        } else if (recurso === "horarios") {
+            dibujarEliminarHorarios(datos);
+        } else {
+            dibujarEliminarSolicitudes(datos);
+        }
 
-document.getElementById("ir-eliminar-solicitudes")
-    .addEventListener("click", async () => {
-        const solicitudes = await fetch("/solicitudes").then(r => r.json());
-        dibujarEliminarSolicitudes(solicitudes);
-        mostrar("eliminar-solicitudes");
-    });
+    } catch (error) {
+        mensaje(error.message);
+    }
+}
 
-document.querySelectorAll(".volver-principal").forEach(boton =>
-    boton.addEventListener("click", () => mostrar("menu-principal"))
+// NAVEGACION
+
+function conectarBoton(id, seccion, cargar = false) {
+    document.getElementById(id).addEventListener(
+        "click",
+        async () => {
+            if (cargar) await cargarDatos();
+            mostrar(seccion);
+        }
+    );
+}
+
+conectarBoton("ir-colegios", "menu-colegios");
+conectarBoton("ir-horarios", "menu-horarios");
+conectarBoton("ir-solicitudes", "menu-solicitudes");
+
+conectarBoton("ir-crear-colegio", "crear-colegio");
+conectarBoton("ir-ver-colegios", "ver-colegios", true);
+
+conectarBoton("ir-crear-horario", "crear-horario");
+conectarBoton("ir-ver-horarios", "ver-horarios", true);
+
+conectarBoton("ir-crear-solicitud", "crear-solicitud", true);
+conectarBoton(
+    "ir-gestionar-solicitudes",
+    "gestionar-solicitudes",
+    true
 );
 
-document.querySelectorAll(".volver-colegios").forEach(boton =>
-    boton.addEventListener("click", () => mostrar("menu-colegios"))
+conectarBoton(
+    "ir-eliminar-colegios",
+    "eliminar-colegios"
 );
 
-document.querySelectorAll(".volver-horarios").forEach(boton =>
-    boton.addEventListener("click", () => mostrar("menu-horarios"))
+conectarBoton(
+    "ir-eliminar-horarios",
+    "eliminar-horarios"
 );
 
-document.querySelectorAll(".volver-solicitudes").forEach(boton =>
-    boton.addEventListener("click", () => mostrar("menu-solicitudes"))
+conectarBoton(
+    "ir-eliminar-solicitudes",
+    "eliminar-solicitudes"
 );
+
+document.querySelectorAll(".volver-principal").forEach(
+    boton => boton.addEventListener(
+        "click", () => mostrar("menu-principal")
+    )
+);
+
+document.querySelectorAll(".volver-colegios").forEach(
+    boton => boton.addEventListener(
+        "click", () => mostrar("menu-colegios")
+    )
+);
+
+document.querySelectorAll(".volver-horarios").forEach(
+    boton => boton.addEventListener(
+        "click", () => mostrar("menu-horarios")
+    )
+);
+
+document.querySelectorAll(".volver-solicitudes").forEach(
+    boton => boton.addEventListener(
+        "click", () => mostrar("menu-solicitudes")
+    )
+);
+
+// FORMULARIO COLEGIO
 
 document.getElementById("form-colegio")
     .addEventListener("submit", async evento => {
         evento.preventDefault();
-        await enviar("/colegios", {
+
+        const correcto = await enviar("/colegios", {
             nombre: document.getElementById("colegio-nombre").value,
             direccion: document.getElementById("colegio-direccion").value,
             telefono: document.getElementById("colegio-telefono").value,
             correo: document.getElementById("colegio-correo").value,
             aliado: document.getElementById("colegio-aliado").checked
         });
+
+        if (correcto) {
+            evento.target.reset();
+        }
     });
+
+// FORMULARIO HORARIO
 
 document.getElementById("form-horario")
     .addEventListener("submit", async evento => {
         evento.preventDefault();
-        await enviar("/horarios", {
+
+        const correcto = await enviar("/horarios", {
             fecha: document.getElementById("horario-fecha").value,
             horaInicio: document.getElementById("horario-inicio").value,
             horaFin: document.getElementById("horario-fin").value
         });
+
+        if (correcto) {
+            evento.target.reset();
+        }
     });
+
+// FORMULARIO SOLICITUD
 
 document.getElementById("form-solicitud")
     .addEventListener("submit", async evento => {
         evento.preventDefault();
-        await enviar("/solicitudes", {
-            idColegio: Number(document.getElementById("solicitud-colegio").value),
-            idHorario: Number(document.getElementById("solicitud-horario").value),
-            cantidadEstudiantes: Number(document.getElementById("solicitud-estudiantes").value),
-            cantidadProfesores: Number(document.getElementById("solicitud-profesores").value),
+
+        const correcto = await enviar("/solicitudes", {
+            idColegio: Number(
+                document.getElementById("solicitud-colegio").value
+            ),
+            idHorario: Number(
+                document.getElementById("solicitud-horario").value
+            ),
+            cantidadEstudiantes: Number(
+                document.getElementById("solicitud-estudiantes").value
+            ),
+            cantidadProfesores: Number(
+                document.getElementById("solicitud-profesores").value
+            ),
             grado: document.getElementById("solicitud-grado").value,
             transporte: document.getElementById("solicitud-transporte").value,
             solicitaTour: document.getElementById("solicitud-tour").checked,
             solicitaCharla: document.getElementById("solicitud-charla").checked,
             solicitaTaller: document.getElementById("solicitud-taller").checked,
-            observaciones: document.getElementById("solicitud-observaciones").value
+            observaciones:
+                document.getElementById("solicitud-observaciones").value
         });
+
+        if (correcto) {
+            evento.target.reset();
+        }
     });
 
+// INICIO
+
 mostrar("menu-principal");
+
 cargarDatos();
+refrescarEliminar("colegios");
+refrescarEliminar("horarios");
+refrescarEliminar("solicitudes");

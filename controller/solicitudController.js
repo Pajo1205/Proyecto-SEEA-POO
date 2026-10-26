@@ -1,14 +1,10 @@
 const Solicitud = require("../Modelo/Solicitud");
 const datos = require("../datos");
 
-// =========================
 // CREAR SOLICITUD
-// =========================
 
 function crearSolicitud(req, res) {
-
     try {
-
         const {
             idColegio,
             idHorario,
@@ -23,11 +19,11 @@ function crearSolicitud(req, res) {
         } = req.body;
 
         const colegio = datos.colegios.find(
-            colegio => colegio.getId() === Number(idColegio)
+            c => c.getId() === Number(idColegio)
         );
 
         const horario = datos.horarios.find(
-            horario => horario.getId() === Number(idHorario)
+            h => h.getId() === Number(idHorario)
         );
 
         if (!colegio || !horario) {
@@ -38,14 +34,12 @@ function crearSolicitud(req, res) {
 
         if (!horario.estaDisponible()) {
             return res.status(409).json({
-                mensaje: "El horario no está disponible"
+                mensaje: "El horario no esta disponible"
             });
         }
 
-        const id = datos.generarId("solicitud");
-
-        const nuevaSolicitud = new Solicitud(
-            id,
+        const solicitud = new Solicitud(
+            datos.generarId("solicitud"),
             colegio,
             horario,
             cantidadEstudiantes,
@@ -55,47 +49,54 @@ function crearSolicitud(req, res) {
             solicitaTour,
             solicitaCharla,
             solicitaTaller,
-            observaciones
+            observaciones || ""
         );
 
-        datos.solicitudes.push(nuevaSolicitud);
+        datos.solicitudes.push(solicitud);
 
         return res.status(201).json({
             mensaje: "Solicitud creada correctamente",
-            solicitud: nuevaSolicitud
+            solicitud
         });
 
     } catch (error) {
-
         return res.status(400).json({
             mensaje: error.message
         });
     }
 }
 
-
-// =========================
 // CONSULTAR SOLICITUDES
-// =========================
 
 function obtenerSolicitudes(req, res) {
-
-    return res.status(200).json(
-        datos.solicitudes
-    );
+    return res.status(200).json(datos.solicitudes);
 }
 
+// BUSCAR SOLICITUD
 
-// =========================
-// APROBAR SOLICITUD
-// =========================
-
-function aprobarSolicitud(req, res) {
-
+function buscarSolicitud(req, res) {
     const id = Number(req.params.id);
 
     const solicitud = datos.solicitudes.find(
-        solicitud => solicitud.getId() === id
+        s => s.getId() === id
+    );
+
+    if (!solicitud) {
+        return res.status(404).json({
+            mensaje: "Solicitud no encontrada"
+        });
+    }
+
+    return res.status(200).json(solicitud);
+}
+
+// APROBAR SOLICITUD
+
+function aprobarSolicitud(req, res) {
+    const id = Number(req.params.id);
+
+    const solicitud = datos.solicitudes.find(
+        s => s.getId() === id
     );
 
     if (!solicitud) {
@@ -108,9 +109,7 @@ function aprobarSolicitud(req, res) {
         .filter(s => s.estaAprobada())
         .map(s => s.getHorario());
 
-    const aprobada = solicitud.aprobar(horariosOcupados);
-
-    if (!aprobada) {
+    if (!solicitud.aprobar(horariosOcupados)) {
         return res.status(409).json({
             mensaje: "No se pudo aprobar la solicitud"
         });
@@ -122,17 +121,13 @@ function aprobarSolicitud(req, res) {
     });
 }
 
-
-// =========================
 // RECHAZAR SOLICITUD
-// =========================
 
 function rechazarSolicitud(req, res) {
-
     const id = Number(req.params.id);
 
     const solicitud = datos.solicitudes.find(
-        solicitud => solicitud.getId() === id
+        s => s.getId() === id
     );
 
     if (!solicitud) {
@@ -153,22 +148,31 @@ function rechazarSolicitud(req, res) {
     });
 }
 
-
-// =========================
 // CANCELAR SOLICITUD
-// =========================
 
 function cancelarSolicitud(req, res) {
-
     const id = Number(req.params.id);
 
     const solicitud = datos.solicitudes.find(
-        solicitud => solicitud.getId() === id
+        s => s.getId() === id
     );
 
     if (!solicitud) {
         return res.status(404).json({
             mensaje: "Solicitud no encontrada"
+        });
+    }
+
+    const visita = datos.visitas.find(
+        v => v.getSolicitud().getId() === id
+    );
+
+    if (visita && (
+        visita.getEstado() === "EN_CURSO" ||
+        visita.getEstado() === "FINALIZADA"
+    )) {
+        return res.status(409).json({
+            mensaje: "No se puede cancelar una visita iniciada o finalizada"
         });
     }
 
@@ -178,38 +182,60 @@ function cancelarSolicitud(req, res) {
         });
     }
 
+    if (visita && visita.getEstado() === "PROGRAMADA") {
+        visita.cancelar();
+    }
+
     return res.status(200).json({
-        mensaje: "Solicitud cancelada",
+        mensaje: "Solicitud cancelada correctamente",
         solicitud
     });
 }
 
+// ELIMINAR SOLICITUD
 
 function eliminarSolicitud(req, res) {
-
     const id = Number(req.params.id);
 
-    const indice = datos.solicitudes.findIndex(
-        solicitud => solicitud.getId() === id
+    const posicion = datos.solicitudes.findIndex(
+        s => s.getId() === id
     );
 
-    if (indice === -1) {
+    if (posicion === -1) {
         return res.status(404).json({
             mensaje: "Solicitud no encontrada"
         });
     }
 
-    datos.solicitudes.splice(indice, 1);
+    const solicitud = datos.solicitudes[posicion];
+
+    const tieneVisita = datos.visitas.some(
+        v => v.getSolicitud().getId() === id
+    );
+
+    if (tieneVisita) {
+        return res.status(409).json({
+            mensaje: "No se puede eliminar una solicitud con visita asociada"
+        });
+    }
+
+    if (solicitud.estaAprobada()) {
+        return res.status(409).json({
+            mensaje: "Primero debe cancelar la solicitud aprobada"
+        });
+    }
+
+    datos.solicitudes.splice(posicion, 1);
 
     return res.status(200).json({
-        mensaje: "Solicitud eliminada"
+        mensaje: "Solicitud eliminada correctamente"
     });
 }
-
 
 module.exports = {
     crearSolicitud,
     obtenerSolicitudes,
+    buscarSolicitud,
     aprobarSolicitud,
     rechazarSolicitud,
     cancelarSolicitud,

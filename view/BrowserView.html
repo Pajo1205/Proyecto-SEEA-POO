@@ -1,257 +1,818 @@
+
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Sistema SEEA</title>
-    <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- BOOTSTRAP -->
+    <link
+        href="/bootstrap/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- ESTILOS -->
     <link href="/style.css" rel="stylesheet">
 </head>
+
 <body>
 
-    <main class="min-vh-100 d-flex align-items-center justify-content-center py-4">
-        <div class="menu-card">
+<main class="min-vh-100 d-flex align-items-center justify-content-center py-4">
 
-            <h1 class="text-center mb-4">Sistema SEEA</h1>
+    <div class="menu-card">
 
-            <p id="mensaje" class="text-center"></p>
+        <h1 class="text-center mb-4">
+            Sistema SEEA
+        </h1>
 
-            <div id="menu-principal" class="seccion">
-                <h2 class="text-center mb-4">Menu</h2>
-                <div class="d-grid gap-3">
-                    <button type="button" class="btn btn-primary btn-lg" id="ir-colegios">
-                        1) Colegios
-                    </button>
-                    <button type="button" class="btn btn-primary btn-lg" id="ir-horarios">
-                        2) Horarios
-                    </button>
-                    <button type="button" class="btn btn-primary btn-lg" id="ir-solicitudes">
-                        3) Solicitudes
-                    </button>
-                </div>
-            </div>
+        <!-- MENSAJES -->
+        <p
+            id="mensaje"
+            class="text-center"
+            role="status"
+            aria-live="polite"
+        ></p>
 
-            <div id="menu-colegios" class="seccion" hidden>
-                <h2 class="text-center mb-4">Colegios</h2>
-                <div class="d-grid gap-3">
-                    <button type="button" class="btn btn-primary" id="ir-crear-colegio">
-                        Crear colegio
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="ir-ver-colegios">
-                        Ver colegios
-                    </button>
-                    <button type="button" class="btn btn-danger" id="ir-eliminar-colegios">
-                        Eliminar colegio
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary volver-principal">
-                        Volver al menu
-                    </button>
-                </div>
-            </div>
+        <!-- ========================= -->
+        <!-- MENU PRINCIPAL -->
+        <!-- ========================= -->
 
-            <div id="crear-colegio" class="seccion" hidden>
-                <h2 class="text-center mb-4">Crear colegio</h2>
-                <form id="form-colegio">
-                    <div class="mb-3">
-                        <label for="colegio-nombre" class="form-label">Nombre:</label>
-                        <input type="text" class="form-control" id="colegio-nombre" name="nombre">
-                    </div>
-                    <div class="mb-3">
-                        <label for="colegio-direccion" class="form-label">Direccion:</label>
-                        <input type="text" class="form-control" id="colegio-direccion" name="direccion">
-                    </div>
-                    <div class="mb-3">
-                        <label for="colegio-telefono" class="form-label">Telefono:</label>
-                        <input type="text" class="form-control" id="colegio-telefono" name="telefono">
-                    </div>
-                    <div class="mb-3">
-                        <label for="colegio-correo" class="form-label">Correo:</label>
-                        <input type="email" class="form-control" id="colegio-correo" name="correo">
-                    </div>
-                    <div class="form-check mb-4">
-                        <input type="checkbox" class="form-check-input" id="colegio-aliado" name="aliado">
-                        <label class="form-check-label" for="colegio-aliado">Aliado</label>
-                    </div>
-                    <div class="d-grid gap-3">
-                        <button type="submit" class="btn btn-success">
-                            Guardar colegio
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary volver-colegios">
-                            Volver
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <div id="menu-principal" class="seccion">
 
-            <div id="ver-colegios" class="seccion" hidden>
-                <h2 class="text-center mb-4">Ver colegios</h2>
-                <ul class="list-group" id="datos-colegios"></ul>
-                <button type="button" class="btn btn-outline-secondary volver-colegios mt-3">
-                    Volver
+            <h2 class="text-center mb-4">Menú principal</h2>
+
+            <div class="d-grid gap-3">
+
+                <button
+                    type="button"
+                    class="btn btn-primary btn-lg"
+                    id="ir-colegios"
+                >
+                    Colegios
                 </button>
-            </div>
 
-            <div id="eliminar-colegios" class="seccion" hidden>
-                <h2 class="text-center mb-4">Eliminar colegio</h2>
-                <ul class="list-group mb-3" id="lista-eliminar-colegios"></ul>
-                <button type="button" class="btn btn-outline-secondary volver-colegios">
-                    Volver
+                <button
+                    type="button"
+                    class="btn btn-primary btn-lg"
+                    id="ir-horarios"
+                >
+                    Horarios
                 </button>
-            </div>
 
-            <div id="menu-horarios" class="seccion" hidden>
-                <h2 class="text-center mb-4">Horarios</h2>
-                <div class="d-grid gap-3">
-                    <button type="button" class="btn btn-primary" id="ir-crear-horario">
-                        Crear horario
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="ir-ver-horarios">
-                        Ver horarios
-                    </button>
-                    <button type="button" class="btn btn-danger" id="ir-eliminar-horarios">
-                        Eliminar horario
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary volver-principal">
-                        Volver al menu
-                    </button>
-                </div>
-            </div>
-
-            <div id="crear-horario" class="seccion" hidden>
-                <h2 class="text-center mb-4">Crear horario</h2>
-                <form id="form-horario">
-                    <div class="mb-3">
-                        <label for="horario-fecha" class="form-label">Fecha (YYYY-MM-DD):</label>
-                        <input type="date" class="form-control" id="horario-fecha" name="fecha">
-                    </div>
-                    <div class="mb-3">
-                        <label for="horario-inicio" class="form-label">Hora inicio (HH:MM):</label>
-                        <input type="time" class="form-control" id="horario-inicio" name="horaInicio">
-                    </div>
-                    <div class="mb-4">
-                        <label for="horario-fin" class="form-label">Hora fin (HH:MM):</label>
-                        <input type="time" class="form-control" id="horario-fin" name="horaFin">
-                    </div>
-                    <div class="d-grid gap-3">
-                        <button type="submit" class="btn btn-success">
-                            Guardar horario
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary volver-horarios">
-                            Volver
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="ver-horarios" class="seccion" hidden>
-                <h2 class="text-center mb-4">Ver horarios</h2>
-                <ul class="list-group" id="datos-horarios"></ul>
-                <button type="button" class="btn btn-outline-secondary volver-horarios mt-3">
-                    Volver
+                <button
+                    type="button"
+                    class="btn btn-primary btn-lg"
+                    id="ir-solicitudes"
+                >
+                    Solicitudes
                 </button>
-            </div>
 
-            <div id="eliminar-horarios" class="seccion" hidden>
-                <h2 class="text-center mb-4">Eliminar horario</h2>
-                <ul class="list-group mb-3" id="lista-eliminar-horarios"></ul>
-                <button type="button" class="btn btn-outline-secondary volver-horarios">
-                    Volver
-                </button>
-            </div>
-
-            <div id="menu-solicitudes" class="seccion" hidden>
-                <h2 class="text-center mb-4">Solicitudes</h2>
-                <div class="d-grid gap-3">
-                    <button type="button" class="btn btn-primary" id="ir-crear-solicitud">
-                        Crear solicitud
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="ir-gestionar-solicitudes">
-                        Gestionar solicitudes
-                    </button>
-                    <button type="button" class="btn btn-danger" id="ir-eliminar-solicitudes">
-                        Eliminar solicitud
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary volver-principal">
-                        Volver al menu
-                    </button>
-                </div>
-            </div>
-
-            <div id="crear-solicitud" class="seccion" hidden>
-                <h2 class="text-center mb-4">Crear solicitud</h2>
-                <form id="form-solicitud">
-                    <div class="mb-3">
-                        <label for="solicitud-colegio" class="form-label">ID colegio:</label>
-                        <input type="number" class="form-control" id="solicitud-colegio" name="idColegio">
-                    </div>
-                    <div class="mb-3">
-                        <label for="solicitud-horario" class="form-label">ID horario:</label>
-                        <input type="number" class="form-control" id="solicitud-horario" name="idHorario">
-                    </div>
-                    <div class="mb-3">
-                        <label for="solicitud-estudiantes" class="form-label">Cantidad estudiantes:</label>
-                        <input type="number" class="form-control" id="solicitud-estudiantes" name="cantidadEstudiantes">
-                    </div>
-                    <div class="mb-3">
-                        <label for="solicitud-profesores" class="form-label">Cantidad profesores:</label>
-                        <input type="number" class="form-control" id="solicitud-profesores" name="cantidadProfesores">
-                    </div>
-                    <div class="mb-3">
-                        <label for="solicitud-grado" class="form-label">Grado:</label>
-                        <input type="text" class="form-control" id="solicitud-grado" name="grado">
-                    </div>
-                    <div class="mb-3">
-                        <label for="solicitud-transporte" class="form-label">Transporte:</label>
-                        <input type="text" class="form-control" id="solicitud-transporte" name="transporte">
-                    </div>
-                    <div class="form-check mb-2">
-                        <input type="checkbox" class="form-check-input" id="solicitud-tour" name="solicitaTour">
-                        <label class="form-check-label" for="solicitud-tour">Tour</label>
-                    </div>
-                    <div class="form-check mb-2">
-                        <input type="checkbox" class="form-check-input" id="solicitud-charla" name="solicitaCharla">
-                        <label class="form-check-label" for="solicitud-charla">Charla</label>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" class="form-check-input" id="solicitud-taller" name="solicitaTaller">
-                        <label class="form-check-label" for="solicitud-taller">Taller</label>
-                    </div>
-                    <div class="mb-4">
-                        <label for="solicitud-observaciones" class="form-label">Observaciones:</label>
-                        <textarea class="form-control" id="solicitud-observaciones" name="observaciones"></textarea>
-                    </div>
-                    <div class="d-grid gap-3">
-                        <button type="submit" class="btn btn-success">
-                            Guardar solicitud
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary volver-solicitudes">
-                            Volver
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <div id="gestionar-solicitudes" class="seccion" hidden>
-                <h2 class="text-center mb-4">Gestionar solicitudes</h2>
-                <ul class="list-group mb-3" id="datos-solicitudes"></ul>
-
-                <button type="button" class="btn btn-outline-secondary volver-solicitudes">
-                    Volver
-                </button>
-            </div>
-
-            <div id="eliminar-solicitudes" class="seccion" hidden>
-                <h2 class="text-center mb-4">Eliminar solicitud</h2>
-                <ul class="list-group mb-3" id="lista-eliminar-solicitudes"></ul>
-                <button type="button" class="btn btn-outline-secondary volver-solicitudes">
-                    Volver
-                </button>
             </div>
 
         </div>
-    </main>
 
-    <script src="/BrowserView.js"></script>
+        <!-- ========================= -->
+        <!-- MENU COLEGIOS -->
+        <!-- ========================= -->
+
+        <div id="menu-colegios" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">Colegios</h2>
+
+            <div class="d-grid gap-3">
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="ir-crear-colegio"
+                >
+                    Crear colegio
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    id="ir-ver-colegios"
+                >
+                    Ver colegios
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="ir-eliminar-colegios"
+                >
+                    Eliminar colegio
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary volver-principal"
+                >
+                    Volver al menú
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- CREAR COLEGIO -->
+        <!-- ========================= -->
+
+        <div id="crear-colegio" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">Crear colegio</h2>
+
+            <form id="form-colegio">
+
+                <div class="mb-3">
+                    <label for="colegio-nombre" class="form-label">
+                        Nombre del colegio:
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="colegio-nombre"
+                        name="nombre"
+                        required
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label for="colegio-direccion" class="form-label">
+                        Dirección:
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="colegio-direccion"
+                        name="direccion"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label for="colegio-telefono" class="form-label">
+                        Teléfono:
+                    </label>
+
+                    <input
+                        type="tel"
+                        class="form-control"
+                        id="colegio-telefono"
+                        name="telefono"
+                    >
+                </div>
+
+                <div class="mb-3">
+                    <label for="colegio-correo" class="form-label">
+                        Correo electrónico:
+                    </label>
+
+                    <input
+                        type="email"
+                        class="form-control"
+                        id="colegio-correo"
+                        name="correo"
+                    >
+                </div>
+
+                <div class="form-check mb-4">
+
+                    <input
+                        type="checkbox"
+                        class="form-check-input"
+                        id="colegio-aliado"
+                        name="aliado"
+                    >
+
+                    <label
+                        class="form-check-label"
+                        for="colegio-aliado"
+                    >
+                        Colegio aliado de SEEA
+                    </label>
+
+                </div>
+
+                <div class="d-grid gap-3">
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        Guardar colegio
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary volver-colegios"
+                    >
+                        Volver
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- VER COLEGIOS -->
+        <!-- ========================= -->
+
+        <div id="ver-colegios" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Colegios registrados
+            </h2>
+
+            <ul
+                class="list-group mb-3"
+                id="datos-colegios"
+            ></ul>
+
+            <button
+                type="button"
+                class="btn btn-outline-secondary volver-colegios"
+            >
+                Volver
+            </button>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- ELIMINAR COLEGIOS -->
+        <!-- ========================= -->
+
+        <div id="eliminar-colegios" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Eliminar colegio
+            </h2>
+
+            <ul
+                class="list-group mb-3"
+                id="lista-eliminar-colegios"
+            ></ul>
+
+            <button
+                type="button"
+                class="btn btn-outline-secondary volver-colegios"
+            >
+                Volver
+            </button>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- MENU HORARIOS -->
+        <!-- ========================= -->
+
+        <div id="menu-horarios" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">Horarios</h2>
+
+            <div class="d-grid gap-3">
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="ir-crear-horario"
+                >
+                    Crear horario
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    id="ir-ver-horarios"
+                >
+                    Ver horarios
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="ir-eliminar-horarios"
+                >
+                    Eliminar horario
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary volver-principal"
+                >
+                    Volver al menú
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- CREAR HORARIO -->
+        <!-- ========================= -->
+
+        <div id="crear-horario" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Crear horario
+            </h2>
+
+            <form id="form-horario">
+
+                <div class="mb-3">
+
+                    <label
+                        for="horario-fecha"
+                        class="form-label"
+                    >
+                        Fecha:
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="horario-fecha"
+                        name="fecha"
+                        required
+                    >
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label
+                        for="horario-inicio"
+                        class="form-label"
+                    >
+                        Hora de inicio:
+                    </label>
+
+                    <input
+                        type="time"
+                        class="form-control"
+                        id="horario-inicio"
+                        name="horaInicio"
+                        required
+                    >
+
+                </div>
+
+                <div class="mb-4">
+
+                    <label
+                        for="horario-fin"
+                        class="form-label"
+                    >
+                        Hora de finalización:
+                    </label>
+
+                    <input
+                        type="time"
+                        class="form-control"
+                        id="horario-fin"
+                        name="horaFin"
+                        required
+                    >
+
+                </div>
+
+                <div class="d-grid gap-3">
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        Guardar horario
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary volver-horarios"
+                    >
+                        Volver
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- VER HORARIOS -->
+        <!-- ========================= -->
+
+        <div id="ver-horarios" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Horarios registrados
+            </h2>
+
+            <ul
+                class="list-group mb-3"
+                id="datos-horarios"
+            ></ul>
+
+            <button
+                type="button"
+                class="btn btn-outline-secondary volver-horarios"
+            >
+                Volver
+            </button>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- ELIMINAR HORARIOS -->
+        <!-- ========================= -->
+
+        <div id="eliminar-horarios" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Eliminar horario
+            </h2>
+
+            <ul
+                class="list-group mb-3"
+                id="lista-eliminar-horarios"
+            ></ul>
+
+            <button
+                type="button"
+                class="btn btn-outline-secondary volver-horarios"
+            >
+                Volver
+            </button>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- MENU SOLICITUDES -->
+        <!-- ========================= -->
+
+        <div id="menu-solicitudes" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Solicitudes
+            </h2>
+
+            <div class="d-grid gap-3">
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="ir-crear-solicitud"
+                >
+                    Crear solicitud
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    id="ir-gestionar-solicitudes"
+                >
+                    Gestionar solicitudes
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-danger"
+                    id="ir-eliminar-solicitudes"
+                >
+                    Eliminar solicitud
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-outline-secondary volver-principal"
+                >
+                    Volver al menú
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- CREAR SOLICITUD -->
+        <!-- ========================= -->
+
+        <div id="crear-solicitud" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Crear solicitud de visita
+            </h2>
+
+            <form id="form-solicitud">
+
+                <!-- COLEGIO -->
+
+                <div class="mb-3">
+
+                    <label
+                        for="solicitud-colegio"
+                        class="form-label"
+                    >
+                        Colegio:
+                    </label>
+
+                    <select
+                        class="form-select"
+                        id="solicitud-colegio"
+                        name="idColegio"
+                        required
+                    >
+                        <option value="">
+                            Seleccione un colegio
+                        </option>
+                    </select>
+
+                </div>
+
+                <!-- HORARIO -->
+
+                <div class="mb-3">
+
+                    <label
+                        for="solicitud-horario"
+                        class="form-label"
+                    >
+                        Horario disponible:
+                    </label>
+
+                    <select
+                        class="form-select"
+                        id="solicitud-horario"
+                        name="idHorario"
+                        required
+                    >
+                        <option value="">
+                            Seleccione un horario
+                        </option>
+                    </select>
+
+                </div>
+
+                <!-- ESTUDIANTES -->
+
+                <div class="mb-3">
+
+                    <label
+                        for="solicitud-estudiantes"
+                        class="form-label"
+                    >
+                        Cantidad de estudiantes:
+                    </label>
+
+                    <input
+                        type="number"
+                        class="form-control"
+                        id="solicitud-estudiantes"
+                        name="cantidadEstudiantes"
+                        min="1"
+                        step="1"
+                        required
+                    >
+
+                </div>
+
+                <!-- PROFESORES -->
+
+                <div class="mb-3">
+
+                    <label
+                        for="solicitud-profesores"
+                        class="form-label"
+                    >
+                        Cantidad de profesores:
+                    </label>
+
+                    <input
+                        type="number"
+                        class="form-control"
+                        id="solicitud-profesores"
+                        name="cantidadProfesores"
+                        min="0"
+                        step="1"
+                        required
+                    >
+
+                </div>
+
+                <!-- GRADO -->
+
+                <div class="mb-3">
+
+                    <label
+                        for="solicitud-grado"
+                        class="form-label"
+                    >
+                        Grado:
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="solicitud-grado"
+                        name="grado"
+                        required
+                    >
+
+                </div>
+
+                <!-- TRANSPORTE -->
+
+                <div class="mb-3">
+
+                    <label
+                        for="solicitud-transporte"
+                        class="form-label"
+                    >
+                        Medio de transporte:
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="solicitud-transporte"
+                        name="transporte"
+                        required
+                    >
+
+                </div>
+
+                <!-- ACTIVIDADES -->
+
+                <fieldset class="mb-3">
+
+                    <legend class="fs-6">
+                        Actividades solicitadas:
+                    </legend>
+
+                    <div class="form-check mb-2">
+
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            id="solicitud-tour"
+                            name="solicitaTour"
+                        >
+
+                        <label
+                            class="form-check-label"
+                            for="solicitud-tour"
+                        >
+                            Tour por UVG
+                        </label>
+
+                    </div>
+
+                    <div class="form-check mb-2">
+
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            id="solicitud-charla"
+                            name="solicitaCharla"
+                        >
+
+                        <label
+                            class="form-check-label"
+                            for="solicitud-charla"
+                        >
+                            Charla informativa
+                        </label>
+
+                    </div>
+
+                    <div class="form-check mb-2">
+
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            id="solicitud-taller"
+                            name="solicitaTaller"
+                        >
+
+                        <label
+                            class="form-check-label"
+                            for="solicitud-taller"
+                        >
+                            Taller
+                        </label>
+
+                    </div>
+
+                </fieldset>
+
+                <!-- OBSERVACIONES -->
+
+                <div class="mb-4">
+
+                    <label
+                        for="solicitud-observaciones"
+                        class="form-label"
+                    >
+                        Observaciones:
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        id="solicitud-observaciones"
+                        name="observaciones"
+                        rows="3"
+                        placeholder="Información adicional de la visita"
+                    ></textarea>
+
+                </div>
+
+                <!-- BOTONES -->
+
+                <div class="d-grid gap-3">
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        Enviar solicitud
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary volver-solicitudes"
+                    >
+                        Volver
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- GESTIONAR SOLICITUDES -->
+        <!-- ========================= -->
+
+        <div id="gestionar-solicitudes" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Gestionar solicitudes
+            </h2>
+
+            <ul
+                class="list-group mb-3"
+                id="datos-solicitudes"
+            ></ul>
+
+            <button
+                type="button"
+                class="btn btn-outline-secondary volver-solicitudes"
+            >
+                Volver
+            </button>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- ELIMINAR SOLICITUDES -->
+        <!-- ========================= -->
+
+        <div id="eliminar-solicitudes" class="seccion" hidden>
+
+            <h2 class="text-center mb-4">
+                Eliminar solicitud
+            </h2>
+
+            <ul
+                class="list-group mb-3"
+                id="lista-eliminar-solicitudes"
+            ></ul>
+
+            <button
+                type="button"
+                class="btn btn-outline-secondary volver-solicitudes"
+            >
+                Volver
+            </button>
+
+        </div>
+
+    </div>
+
+</main>
+
+<!-- JAVASCRIPT DEL FRONTEND -->
+<script src="/BrowserView.js"></script>
 
 </body>
 </html>
+

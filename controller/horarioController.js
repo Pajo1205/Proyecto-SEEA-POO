@@ -3,11 +3,8 @@ const datos = require("../datos");
 
 // CREAR HORARIO
 
-
 function crearHorario(req, res) {
-
     try {
-
         const {
             fecha,
             horaInicio,
@@ -20,78 +17,60 @@ function crearHorario(req, res) {
             });
         }
 
-        const id = datos.generarId("horario");
-
-        const nuevoHorario = new Horario(
-            id,
+        const horario = new Horario(
+            datos.generarId("horario"),
             fecha,
             horaInicio,
             horaFin
         );
 
-        // Evitar horarios traslapados
-        const existeConflicto = datos.horarios.some(
-            horario =>
-                horario.seTraslapaCon(nuevoHorario)
+        const traslapado = datos.horarios.some(
+            h => h.seTraslapaCon(horario)
         );
 
-        if (existeConflicto) {
+        if (traslapado) {
             return res.status(409).json({
-                mensaje: "El horario se traslapa con uno existente"
+                mensaje: "El horario se traslapa con otro existente"
             });
         }
 
-        datos.horarios.push(nuevoHorario);
+        datos.horarios.push(horario);
 
         return res.status(201).json({
             mensaje: "Horario creado correctamente",
-            horario: nuevoHorario
+            horario
         });
 
     } catch (error) {
-
         return res.status(400).json({
             mensaje: error.message
         });
     }
 }
 
-
-// CONSULTAR HORARIOS
-
+// OBTENER HORARIOS
 
 function obtenerHorarios(req, res) {
-
-    return res.status(200).json(
-        datos.horarios
-    );
+    return res.status(200).json(datos.horarios);
 }
 
-
-
-// HORARIOS DISPONIBLES
-
+// OBTENER DISPONIBLES
 
 function obtenerDisponibles(req, res) {
-
     const disponibles = datos.horarios.filter(
-        horario => horario.estaDisponible()
+        h => h.estaDisponible()
     );
 
     return res.status(200).json(disponibles);
 }
 
-
-
 // BUSCAR HORARIO
 
-
 function buscarHorario(req, res) {
-
     const id = Number(req.params.id);
 
     const horario = datos.horarios.find(
-        horario => horario.getId() === id
+        h => h.getId() === id
     );
 
     if (!horario) {
@@ -103,25 +82,43 @@ function buscarHorario(req, res) {
     return res.status(200).json(horario);
 }
 
+// ELIMINAR HORARIO
 
 function eliminarHorario(req, res) {
-
     const id = Number(req.params.id);
 
-    const indice = datos.horarios.findIndex(
-        horario => horario.getId() === id
+    const posicion = datos.horarios.findIndex(
+        h => h.getId() === id
     );
 
-    if (indice === -1) {
+    if (posicion === -1) {
         return res.status(404).json({
             mensaje: "Horario no encontrado"
         });
     }
 
-    datos.horarios.splice(indice, 1);
+    const horario = datos.horarios[posicion];
+
+    if (!horario.estaDisponible()) {
+        return res.status(409).json({
+            mensaje: "No se puede eliminar un horario ocupado"
+        });
+    }
+
+    const tieneSolicitudes = datos.solicitudes.some(
+        s => s.getHorario().getId() === id
+    );
+
+    if (tieneSolicitudes) {
+        return res.status(409).json({
+            mensaje: "No se puede eliminar un horario asociado a solicitudes"
+        });
+    }
+
+    datos.horarios.splice(posicion, 1);
 
     return res.status(200).json({
-        mensaje: "Horario eliminado"
+        mensaje: "Horario eliminado correctamente"
     });
 }
 
