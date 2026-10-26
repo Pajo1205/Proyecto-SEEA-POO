@@ -2,383 +2,223 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistema SEEA</title>
+    <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/style.css" rel="stylesheet">
 </head>
 <body>
 
-    <h1>Sistema SEEA</h1>
+    <main class="min-vh-100 d-flex align-items-center justify-content-center py-4">
+        <div class="menu-card">
 
-    <p id="mensaje"></p>
+            <h1 class="text-center mb-4">Sistema SEEA</h1>
 
-    <hr>
+            <p id="mensaje" class="text-center"></p>
 
-    <div id="menu-principal" class="seccion">
-        <h2>Menu</h2>
-        <p>
-            <button type="button" id="ir-colegios">1) Colegios</button>
-        </p>
-        <p>
-            <button type="button" id="ir-horarios">2) Horarios</button>
-        </p>
-        <p>
-            <button type="button" id="ir-solicitudes">3) Solicitudes</button>
-        </p>
-    </div>
+            <div id="menu-principal" class="seccion">
+                <h2 class="text-center mb-4">Menu</h2>
+                <div class="d-grid gap-3">
+                    <button type="button" class="btn btn-primary btn-lg" id="ir-colegios">
+                        1) Colegios
+                    </button>
+                    <button type="button" class="btn btn-primary btn-lg" id="ir-horarios">
+                        2) Horarios
+                    </button>
+                    <button type="button" class="btn btn-primary btn-lg" id="ir-solicitudes">
+                        3) Solicitudes
+                    </button>
+                </div>
+            </div>
 
-    <div id="menu-colegios" class="seccion" hidden>
-        <h2>Colegios</h2>
-        <p>
-            <button type="button" id="ir-crear-colegio">Crear colegio</button>
-        </p>
-        <p>
-            <button type="button" id="ir-ver-colegios">Ver colegios</button>
-        </p>
-        <p>
-            <button type="button" class="volver-principal">Volver al menu</button>
-        </p>
-    </div>
+            <div id="menu-colegios" class="seccion" hidden>
+                <h2 class="text-center mb-4">Colegios</h2>
+                <div class="d-grid gap-3">
+                    <button type="button" class="btn btn-primary" id="ir-crear-colegio">
+                        Crear colegio
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="ir-ver-colegios">
+                        Ver colegios
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary volver-principal">
+                        Volver al menu
+                    </button>
+                </div>
+            </div>
 
-    <div id="crear-colegio" class="seccion" hidden>
-        <h2>Crear colegio</h2>
-        <form id="form-colegio">
-            <p>
-                <label for="colegio-nombre">Nombre:</label>
-                <input type="text" id="colegio-nombre" name="nombre">
-            </p>
-            <p>
-                <label for="colegio-direccion">Direccion:</label>
-                <input type="text" id="colegio-direccion" name="direccion">
-            </p>
-            <p>
-                <label for="colegio-telefono">Telefono:</label>
-                <input type="text" id="colegio-telefono" name="telefono">
-            </p>
-            <p>
-                <label for="colegio-correo">Correo:</label>
-                <input type="email" id="colegio-correo" name="correo">
-            </p>
-            <p>
-                <label for="colegio-aliado">Aliado:</label>
-                <input type="checkbox" id="colegio-aliado" name="aliado">
-            </p>
-            <p>
-                <button type="submit">Guardar colegio</button>
-            </p>
-        </form>
-        <p>
-            <button type="button" class="volver-colegios">Volver</button>
-        </p>
-    </div>
+            <div id="crear-colegio" class="seccion" hidden>
+                <h2 class="text-center mb-4">Crear colegio</h2>
+                <form id="form-colegio">
+                    <div class="mb-3">
+                        <label for="colegio-nombre" class="form-label">Nombre:</label>
+                        <input type="text" class="form-control" id="colegio-nombre" name="nombre">
+                    </div>
+                    <div class="mb-3">
+                        <label for="colegio-direccion" class="form-label">Direccion:</label>
+                        <input type="text" class="form-control" id="colegio-direccion" name="direccion">
+                    </div>
+                    <div class="mb-3">
+                        <label for="colegio-telefono" class="form-label">Telefono:</label>
+                        <input type="text" class="form-control" id="colegio-telefono" name="telefono">
+                    </div>
+                    <div class="mb-3">
+                        <label for="colegio-correo" class="form-label">Correo:</label>
+                        <input type="email" class="form-control" id="colegio-correo" name="correo">
+                    </div>
+                    <div class="form-check mb-4">
+                        <input type="checkbox" class="form-check-input" id="colegio-aliado" name="aliado">
+                        <label class="form-check-label" for="colegio-aliado">Aliado</label>
+                    </div>
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-success">
+                            Guardar colegio
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary volver-colegios">
+                            Volver
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-    <div id="ver-colegios" class="seccion" hidden>
-        <h2>Ver colegios</h2>
-        <pre id="datos-colegios"></pre>
-        <p>
-            <button type="button" class="volver-colegios">Volver</button>
-        </p>
-    </div>
+            <div id="ver-colegios" class="seccion" hidden>
+                <h2 class="text-center mb-4">Ver colegios</h2>
+                <ul class="list-group" id="datos-colegios"></ul>
+                <button type="button" class="btn btn-outline-secondary volver-colegios mt-3">
+                    Volver
+                </button>
+            </div>
 
-    <div id="menu-horarios" class="seccion" hidden>
-        <h2>Horarios</h2>
-        <p>
-            <button type="button" id="ir-crear-horario">Crear horario</button>
-        </p>
-        <p>
-            <button type="button" id="ir-ver-horarios">Ver horarios</button>
-        </p>
-        <p>
-            <button type="button" class="volver-principal">Volver al menu</button>
-        </p>
-    </div>
+            <div id="menu-horarios" class="seccion" hidden>
+                <h2 class="text-center mb-4">Horarios</h2>
+                <div class="d-grid gap-3">
+                    <button type="button" class="btn btn-primary" id="ir-crear-horario">
+                        Crear horario
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="ir-ver-horarios">
+                        Ver horarios
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary volver-principal">
+                        Volver al menu
+                    </button>
+                </div>
+            </div>
 
-    <div id="crear-horario" class="seccion" hidden>
-        <h2>Crear horario</h2>
-        <form id="form-horario">
-            <p>
-                <label for="horario-fecha">Fecha (YYYY-MM-DD):</label>
-                <input type="date" id="horario-fecha" name="fecha">
-            </p>
-            <p>
-                <label for="horario-inicio">Hora inicio (HH:MM):</label>
-                <input type="time" id="horario-inicio" name="horaInicio">
-            </p>
-            <p>
-                <label for="horario-fin">Hora fin (HH:MM):</label>
-                <input type="time" id="horario-fin" name="horaFin">
-            </p>
-            <p>
-                <button type="submit">Guardar horario</button>
-            </p>
-        </form>
-        <p>
-            <button type="button" class="volver-horarios">Volver</button>
-        </p>
-    </div>
+            <div id="crear-horario" class="seccion" hidden>
+                <h2 class="text-center mb-4">Crear horario</h2>
+                <form id="form-horario">
+                    <div class="mb-3">
+                        <label for="horario-fecha" class="form-label">Fecha (YYYY-MM-DD):</label>
+                        <input type="date" class="form-control" id="horario-fecha" name="fecha">
+                    </div>
+                    <div class="mb-3">
+                        <label for="horario-inicio" class="form-label">Hora inicio (HH:MM):</label>
+                        <input type="time" class="form-control" id="horario-inicio" name="horaInicio">
+                    </div>
+                    <div class="mb-4">
+                        <label for="horario-fin" class="form-label">Hora fin (HH:MM):</label>
+                        <input type="time" class="form-control" id="horario-fin" name="horaFin">
+                    </div>
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-success">
+                            Guardar horario
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary volver-horarios">
+                            Volver
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-    <div id="ver-horarios" class="seccion" hidden>
-        <h2>Ver horarios</h2>
-        <pre id="datos-horarios"></pre>
-        <p>
-            <button type="button" class="volver-horarios">Volver</button>
-        </p>
-    </div>
+            <div id="ver-horarios" class="seccion" hidden>
+                <h2 class="text-center mb-4">Ver horarios</h2>
+                <ul class="list-group" id="datos-horarios"></ul>
+                <button type="button" class="btn btn-outline-secondary volver-horarios mt-3">
+                    Volver
+                </button>
+            </div>
 
-    <div id="menu-solicitudes" class="seccion" hidden>
-        <h2>Solicitudes</h2>
-        <p>
-            <button type="button" id="ir-crear-solicitud">Crear solicitud</button>
-        </p>
-        <p>
-            <button type="button" id="ir-gestionar-solicitudes">Gestionar solicitudes</button>
-        </p>
-        <p>
-            <button type="button" class="volver-principal">Volver al menu</button>
-        </p>
-    </div>
+            <div id="menu-solicitudes" class="seccion" hidden>
+                <h2 class="text-center mb-4">Solicitudes</h2>
+                <div class="d-grid gap-3">
+                    <button type="button" class="btn btn-primary" id="ir-crear-solicitud">
+                        Crear solicitud
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="ir-gestionar-solicitudes">
+                        Gestionar solicitudes
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary volver-principal">
+                        Volver al menu
+                    </button>
+                </div>
+            </div>
 
-    <div id="crear-solicitud" class="seccion" hidden>
-        <h2>Crear solicitud</h2>
-        <form id="form-solicitud">
-            <p>
-                <label for="solicitud-colegio">ID colegio:</label>
-                <input type="number" id="solicitud-colegio" name="idColegio">
-            </p>
-            <p>
-                <label for="solicitud-horario">ID horario:</label>
-                <input type="number" id="solicitud-horario" name="idHorario">
-            </p>
-            <p>
-                <label for="solicitud-estudiantes">Cantidad estudiantes:</label>
-                <input type="number" id="solicitud-estudiantes" name="cantidadEstudiantes">
-            </p>
-            <p>
-                <label for="solicitud-profesores">Cantidad profesores:</label>
-                <input type="number" id="solicitud-profesores" name="cantidadProfesores">
-            </p>
-            <p>
-                <label for="solicitud-grado">Grado:</label>
-                <input type="text" id="solicitud-grado" name="grado">
-            </p>
-            <p>
-                <label for="solicitud-transporte">Transporte:</label>
-                <input type="text" id="solicitud-transporte" name="transporte">
-            </p>
-            <p>
-                <label for="solicitud-tour">Tour:</label>
-                <input type="checkbox" id="solicitud-tour" name="solicitaTour">
-            </p>
-            <p>
-                <label for="solicitud-charla">Charla:</label>
-                <input type="checkbox" id="solicitud-charla" name="solicitaCharla">
-            </p>
-            <p>
-                <label for="solicitud-taller">Taller:</label>
-                <input type="checkbox" id="solicitud-taller" name="solicitaTaller">
-            </p>
-            <p>
-                <label for="solicitud-observaciones">Observaciones:</label>
-                <textarea id="solicitud-observaciones" name="observaciones"></textarea>
-            </p>
-            <p>
-                <button type="submit">Guardar solicitud</button>
-            </p>
-        </form>
-        <p>
-            <button type="button" class="volver-solicitudes">Volver</button>
-        </p>
-    </div>
+            <div id="crear-solicitud" class="seccion" hidden>
+                <h2 class="text-center mb-4">Crear solicitud</h2>
+                <form id="form-solicitud">
+                    <div class="mb-3">
+                        <label for="solicitud-colegio" class="form-label">ID colegio:</label>
+                        <input type="number" class="form-control" id="solicitud-colegio" name="idColegio">
+                    </div>
+                    <div class="mb-3">
+                        <label for="solicitud-horario" class="form-label">ID horario:</label>
+                        <input type="number" class="form-control" id="solicitud-horario" name="idHorario">
+                    </div>
+                    <div class="mb-3">
+                        <label for="solicitud-estudiantes" class="form-label">Cantidad estudiantes:</label>
+                        <input type="number" class="form-control" id="solicitud-estudiantes" name="cantidadEstudiantes">
+                    </div>
+                    <div class="mb-3">
+                        <label for="solicitud-profesores" class="form-label">Cantidad profesores:</label>
+                        <input type="number" class="form-control" id="solicitud-profesores" name="cantidadProfesores">
+                    </div>
+                    <div class="mb-3">
+                        <label for="solicitud-grado" class="form-label">Grado:</label>
+                        <input type="text" class="form-control" id="solicitud-grado" name="grado">
+                    </div>
+                    <div class="mb-3">
+                        <label for="solicitud-transporte" class="form-label">Transporte:</label>
+                        <input type="text" class="form-control" id="solicitud-transporte" name="transporte">
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" id="solicitud-tour" name="solicitaTour">
+                        <label class="form-check-label" for="solicitud-tour">Tour</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" id="solicitud-charla" name="solicitaCharla">
+                        <label class="form-check-label" for="solicitud-charla">Charla</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="solicitud-taller" name="solicitaTaller">
+                        <label class="form-check-label" for="solicitud-taller">Taller</label>
+                    </div>
+                    <div class="mb-4">
+                        <label for="solicitud-observaciones" class="form-label">Observaciones:</label>
+                        <textarea class="form-control" id="solicitud-observaciones" name="observaciones"></textarea>
+                    </div>
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-success">
+                            Guardar solicitud
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary volver-solicitudes">
+                            Volver
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-    <div id="gestionar-solicitudes" class="seccion" hidden>
-        <h2>Gestionar solicitudes</h2>
-        <pre id="datos-solicitudes"></pre>
+            <div id="gestionar-solicitudes" class="seccion" hidden>
+                <h2 class="text-center mb-4">Gestionar solicitudes</h2>
+                <ul class="list-group mb-3" id="datos-solicitudes"></ul>
 
-        <h3>Acciones</h3>
-        <div id="acciones-solicitudes"></div>
-        <p>
-            <button type="button" class="volver-solicitudes">Volver</button>
-        </p>
-    </div>
+                <button type="button" class="btn btn-outline-secondary volver-solicitudes">
+                    Volver
+                </button>
+            </div>
 
-    <script>
-        function mostrar(id) {
-            document.querySelectorAll(".seccion").forEach(seccion => {
-                seccion.hidden = seccion.id !== id;
-            });
-        }
+        </div>
+    </main>
 
-        function mensaje(texto) {
-            document.getElementById("mensaje").textContent = texto;
-        }
-
-        async function enviar(url, datos) {
-            const respuesta = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(datos)
-            });
-
-            const resultado = await respuesta.json();
-            mensaje(resultado.mensaje || "listo");
-
-            await cargarDatos();
-        }
-
-        async function cargarDatos() {
-            const colegios = await fetch("/colegios").then(r => r.json());
-            const horarios = await fetch("/horarios").then(r => r.json());
-            const solicitudes = await fetch("/solicitudes").then(r => r.json());
-
-            document.getElementById("datos-colegios").textContent =
-                JSON.stringify(colegios, null, 2);
-            document.getElementById("datos-horarios").textContent =
-                JSON.stringify(horarios, null, 2);
-            document.getElementById("datos-solicitudes").textContent =
-                JSON.stringify(solicitudes, null, 2);
-
-            dibujarAcciones(solicitudes);
-        }
-
-        function dibujarAcciones(solicitudes) {
-            const contenedor = document.getElementById("acciones-solicitudes");
-            contenedor.innerHTML = "";
-
-            if (solicitudes.length === 0) {
-                contenedor.textContent = "no hay solicitudes";
-                return;
-            }
-
-            solicitudes.forEach(solicitud => {
-                const linea = document.createElement("p");
-                linea.textContent = `Solicitud #${solicitud.id} (${solicitud.estado}) `;
-
-                if (solicitud.estado === "PENDIENTE") {
-                    linea.appendChild(botonAccion(solicitud.id, "aprobar"));
-                    linea.appendChild(botonAccion(solicitud.id, "rechazar"));
-                }
-
-                if (solicitud.estado !== "CANCELADA" &&
-                    solicitud.estado !== "RECHAZADA" &&
-                    solicitud.estado !== "FINALIZADA") {
-                    linea.appendChild(botonAccion(solicitud.id, "cancelar"));
-                }
-
-                contenedor.appendChild(linea);
-            });
-        }
-
-        function botonAccion(id, accion) {
-            const boton = document.createElement("button");
-            boton.textContent = accion;
-            boton.addEventListener("click", () => ejecutarAccion(id, accion));
-            return boton;
-        }
-
-        async function ejecutarAccion(id, accion) {
-            const respuesta = await fetch(
-                `/solicitudes/${id}/${accion}`,
-                { method: "PATCH" }
-            );
-
-            const resultado = await respuesta.json();
-            mensaje(resultado.mensaje || "listo");
-
-            await cargarDatos();
-        }
-
-        document.getElementById("ir-colegios")
-            .addEventListener("click", () => mostrar("menu-colegios"));
-
-        document.getElementById("ir-horarios")
-            .addEventListener("click", () => mostrar("menu-horarios"));
-
-        document.getElementById("ir-solicitudes")
-            .addEventListener("click", () => mostrar("menu-solicitudes"));
-
-        document.getElementById("ir-crear-colegio")
-            .addEventListener("click", () => mostrar("crear-colegio"));
-
-        document.getElementById("ir-ver-colegios")
-            .addEventListener("click", async () => {
-                await cargarDatos();
-                mostrar("ver-colegios");
-            });
-
-        document.getElementById("ir-crear-horario")
-            .addEventListener("click", () => mostrar("crear-horario"));
-
-        document.getElementById("ir-ver-horarios")
-            .addEventListener("click", async () => {
-                await cargarDatos();
-                mostrar("ver-horarios");
-            });
-
-        document.getElementById("ir-crear-solicitud")
-            .addEventListener("click", () => mostrar("crear-solicitud"));
-
-        document.getElementById("ir-gestionar-solicitudes")
-            .addEventListener("click", async () => {
-                await cargarDatos();
-                mostrar("gestionar-solicitudes");
-            });
-
-        document.querySelectorAll(".volver-principal").forEach(boton =>
-            boton.addEventListener("click", () => mostrar("menu-principal"))
-        );
-
-        document.querySelectorAll(".volver-colegios").forEach(boton =>
-            boton.addEventListener("click", () => mostrar("menu-colegios"))
-        );
-
-        document.querySelectorAll(".volver-horarios").forEach(boton =>
-            boton.addEventListener("click", () => mostrar("menu-horarios"))
-        );
-
-        document.querySelectorAll(".volver-solicitudes").forEach(boton =>
-            boton.addEventListener("click", () => mostrar("menu-solicitudes"))
-        );
-
-        document.getElementById("form-colegio")
-            .addEventListener("submit", async evento => {
-                evento.preventDefault();
-                await enviar("/colegios", {
-                    nombre: document.getElementById("colegio-nombre").value,
-                    direccion: document.getElementById("colegio-direccion").value,
-                    telefono: document.getElementById("colegio-telefono").value,
-                    correo: document.getElementById("colegio-correo").value,
-                    aliado: document.getElementById("colegio-aliado").checked
-                });
-            });
-
-        document.getElementById("form-horario")
-            .addEventListener("submit", async evento => {
-                evento.preventDefault();
-                await enviar("/horarios", {
-                    fecha: document.getElementById("horario-fecha").value,
-                    horaInicio: document.getElementById("horario-inicio").value,
-                    horaFin: document.getElementById("horario-fin").value
-                });
-            });
-
-        document.getElementById("form-solicitud")
-            .addEventListener("submit", async evento => {
-                evento.preventDefault();
-                await enviar("/solicitudes", {
-                    idColegio: Number(document.getElementById("solicitud-colegio").value),
-                    idHorario: Number(document.getElementById("solicitud-horario").value),
-                    cantidadEstudiantes: Number(document.getElementById("solicitud-estudiantes").value),
-                    cantidadProfesores: Number(document.getElementById("solicitud-profesores").value),
-                    grado: document.getElementById("solicitud-grado").value,
-                    transporte: document.getElementById("solicitud-transporte").value,
-                    solicitaTour: document.getElementById("solicitud-tour").checked,
-                    solicitaCharla: document.getElementById("solicitud-charla").checked,
-                    solicitaTaller: document.getElementById("solicitud-taller").checked,
-                    observaciones: document.getElementById("solicitud-observaciones").value
-                });
-            });
-
-        mostrar("menu-principal");
-        cargarDatos();
-    </script>
+    <script src="/BrowserView.js"></script>
 
 </body>
 </html>

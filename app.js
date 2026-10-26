@@ -12,6 +12,25 @@ const PORT = 3000;
 // Permitir recibir datos JSON desde Postman
 app.use(express.json());
 
+// Servir archivos estaticos (sonidos, imagenes, etc.)
+app.use("/assets", express.static(path.join(__dirname, "view", "assets")));
+
+// Servir Bootstrap instalado con npm
+app.use(
+    "/bootstrap",
+    express.static(path.join(__dirname, "node_modules", "bootstrap", "dist"))
+);
+
+// Servir los estilos propios de la vista
+app.get("/style.css", (req, res) => {
+    res.sendFile(path.join(__dirname, "view", "style.css"));
+});
+
+// Servir el JavaScript propio de la vista
+app.get("/BrowserView.js", (req, res) => {
+    res.sendFile(path.join(__dirname, "view", "BrowserView.js"));
+});
+
 // ======================================
 // IMPORTAR CONTROLADORES
 // ======================================
