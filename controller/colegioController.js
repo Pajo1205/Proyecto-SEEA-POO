@@ -134,9 +134,31 @@ function actualizarColegio(req, res) {
     });
 }
 
+function eliminarColegio(req, res) {
+
+    const id = Number(req.params.id);
+
+    const indice = datos.colegios.findIndex(
+        colegio => colegio.getId() === id
+    );
+
+    if (indice === -1) {
+        return res.status(404).json({
+            mensaje: "Colegio no encontrado"
+        });
+    }
+
+    datos.colegios.splice(indice, 1);
+
+    return res.status(200).json({
+        mensaje: "Colegio eliminado"
+    });
+}
+
 module.exports = {
     registrarColegio,
     obtenerColegios,
     buscarColegio,
-    actualizarColegio
+    actualizarColegio,
+    eliminarColegio
 };

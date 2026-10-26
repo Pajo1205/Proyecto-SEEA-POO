@@ -20,7 +20,7 @@ function crearHorario(req, res) {
             });
         }
 
-        const id = datos.horarios.length + 1;
+        const id = datos.generarId("horario");
 
         const nuevoHorario = new Horario(
             id,
@@ -104,9 +104,31 @@ function buscarHorario(req, res) {
 }
 
 
+function eliminarHorario(req, res) {
+
+    const id = Number(req.params.id);
+
+    const indice = datos.horarios.findIndex(
+        horario => horario.getId() === id
+    );
+
+    if (indice === -1) {
+        return res.status(404).json({
+            mensaje: "Horario no encontrado"
+        });
+    }
+
+    datos.horarios.splice(indice, 1);
+
+    return res.status(200).json({
+        mensaje: "Horario eliminado"
+    });
+}
+
 module.exports = {
     crearHorario,
     obtenerHorarios,
     obtenerDisponibles,
-    buscarHorario
+    buscarHorario,
+    eliminarHorario
 };

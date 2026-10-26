@@ -42,7 +42,7 @@ function crearSolicitud(req, res) {
             });
         }
 
-        const id = datos.solicitudes.length + 1;
+        const id = datos.generarId("solicitud");
 
         const nuevaSolicitud = new Solicitud(
             id,
@@ -185,10 +185,33 @@ function cancelarSolicitud(req, res) {
 }
 
 
+function eliminarSolicitud(req, res) {
+
+    const id = Number(req.params.id);
+
+    const indice = datos.solicitudes.findIndex(
+        solicitud => solicitud.getId() === id
+    );
+
+    if (indice === -1) {
+        return res.status(404).json({
+            mensaje: "Solicitud no encontrada"
+        });
+    }
+
+    datos.solicitudes.splice(indice, 1);
+
+    return res.status(200).json({
+        mensaje: "Solicitud eliminada"
+    });
+}
+
+
 module.exports = {
     crearSolicitud,
     obtenerSolicitudes,
     aprobarSolicitud,
     rechazarSolicitud,
-    cancelarSolicitud
+    cancelarSolicitud,
+    eliminarSolicitud
 };

@@ -178,6 +178,103 @@ function dibujarSolicitudes(solicitudes) {
     });
 }
 
+function dibujarEliminarColegios(colegios) {
+    const lista = document.getElementById("lista-eliminar-colegios");
+    lista.innerHTML = "";
+
+    if (colegios.length === 0) {
+        return listaVacia("lista-eliminar-colegios", "no hay colegios");
+    }
+
+    colegios.forEach(colegio => {
+        const texto = `#${colegio.id} · ${colegio.nombre}`;
+        lista.appendChild(
+            crearItem(texto, botonEliminar("colegios", colegio.id))
+        );
+    });
+}
+
+function dibujarEliminarHorarios(horarios) {
+    const lista = document.getElementById("lista-eliminar-horarios");
+    lista.innerHTML = "";
+
+    if (horarios.length === 0) {
+        return listaVacia("lista-eliminar-horarios", "no hay horarios");
+    }
+
+    horarios.forEach(horario => {
+        const texto =
+            `#${horario.id} · ${horario.fecha}` +
+            ` · ${horario.horaInicio} - ${horario.horaFin}`;
+        lista.appendChild(
+            crearItem(texto, botonEliminar("horarios", horario.id))
+        );
+    });
+}
+
+function dibujarEliminarSolicitudes(solicitudes) {
+    const lista = document.getElementById("lista-eliminar-solicitudes");
+    lista.innerHTML = "";
+
+    if (solicitudes.length === 0) {
+        return listaVacia("lista-eliminar-solicitudes", "no hay solicitudes");
+    }
+
+    solicitudes.forEach(solicitud => {
+        const texto =
+            `#${solicitud.id} · ${solicitud.colegio.nombre}` +
+            ` · ${solicitud.horario.fecha}` +
+            ` · ${solicitud.estado}`;
+        lista.appendChild(
+            crearItem(texto, botonEliminar("solicitudes", solicitud.id))
+        );
+    });
+}
+
+function botonEliminar(recurso, id) {
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "btn btn-danger btn-sm";
+    boton.textContent = "Eliminar";
+    boton.addEventListener("click", () => eliminar(recurso, id));
+    return boton;
+}
+
+async function eliminar(recurso, id) {
+    const nombres = {
+        colegios: "colegio",
+        horarios: "horario",
+        solicitudes: "solicitud"
+    };
+
+    if (!confirm(`¿Eliminar ${nombres[recurso]} #${id}?`)) {
+        return;
+    }
+
+    const respuesta = await fetch(`/${recurso}/${id}`, {
+        method: "DELETE"
+    });
+
+    const resultado = await respuesta.json();
+    mensaje(resultado.mensaje || "listo");
+
+    await cargarDatos();
+    await refrescarEliminar(recurso);
+}
+
+async function refrescarEliminar(recurso) {
+    if (recurso === "colegios") {
+        const colegios = await fetch("/colegios").then(r => r.json());
+        dibujarEliminarColegios(colegios);
+    } else if (recurso === "horarios") {
+        const horarios = await fetch("/horarios").then(r => r.json());
+        dibujarEliminarHorarios(horarios);
+    } else {
+        const solicitudes = await fetch("/solicitudes").then(r => r.json());
+        dibujarEliminarSolicitudes(solicitudes);
+    }
+}
+
 function botonAccion(id, accion) {
     const boton = document.createElement("button");
     boton.type = "button";
@@ -240,6 +337,27 @@ document.getElementById("ir-gestionar-solicitudes")
     .addEventListener("click", async () => {
         await cargarDatos();
         mostrar("gestionar-solicitudes");
+    });
+
+document.getElementById("ir-eliminar-colegios")
+    .addEventListener("click", async () => {
+        const colegios = await fetch("/colegios").then(r => r.json());
+        dibujarEliminarColegios(colegios);
+        mostrar("eliminar-colegios");
+    });
+
+document.getElementById("ir-eliminar-horarios")
+    .addEventListener("click", async () => {
+        const horarios = await fetch("/horarios").then(r => r.json());
+        dibujarEliminarHorarios(horarios);
+        mostrar("eliminar-horarios");
+    });
+
+document.getElementById("ir-eliminar-solicitudes")
+    .addEventListener("click", async () => {
+        const solicitudes = await fetch("/solicitudes").then(r => r.json());
+        dibujarEliminarSolicitudes(solicitudes);
+        mostrar("eliminar-solicitudes");
     });
 
 document.querySelectorAll(".volver-principal").forEach(boton =>

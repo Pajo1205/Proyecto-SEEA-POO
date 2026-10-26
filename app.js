@@ -87,6 +87,9 @@ app.get("/colegios/:id", colegioController.buscarColegio);
 // Actualizar colegio
 app.patch("/colegios/:id", colegioController.actualizarColegio);
 
+// Eliminar colegio
+app.delete("/colegios/:id", colegioController.eliminarColegio);
+
 // ======================================
 // RUTAS DE HORARIOS
 // ======================================
@@ -105,6 +108,9 @@ app.get(
 
 // Buscar horario por ID
 app.get("/horarios/:id", horarioController.buscarHorario);
+
+// Eliminar horario
+app.delete("/horarios/:id", horarioController.eliminarHorario);
 
 // ======================================
 // RUTAS DE SOLICITUDES
@@ -138,6 +144,12 @@ app.patch(
 app.patch(
     "/solicitudes/:id/cancelar",
     solicitudController.cancelarSolicitud
+);
+
+// Eliminar solicitud
+app.delete(
+    "/solicitudes/:id",
+    solicitudController.eliminarSolicitud
 );
 
 // ======================================
