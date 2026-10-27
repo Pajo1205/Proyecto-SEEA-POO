@@ -1,22 +1,82 @@
+
+// ==========================================
+// IMPORTACIONES
+// ==========================================
+
 const Horario = require("../Modelo/Horario");
 const datos = require("../datos");
 
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
+
+// Buscar horario por ID
+function buscarHorarioPorId(id) {
+
+    return datos.horarios.find(
+        horario => horario.getId() === Number(id)
+    );
+}
+
+// Verificar si el usuario es encargado SEEA
+function esEncargado(req) {
+
+    return req.usuario?.rol === "SEEA";
+}
+
+// Responder con error
+function responderError(res, codigo, mensaje) {
+
+    return res.status(codigo).json({
+        mensaje
+    });
+}
+
+// Convertir horario a JSON
+function horarioDTO(horario) {
+
+    return {
+        id: horario.getId(),
+        fecha: horario.getFecha(),
+        horaInicio: horario.getHoraInicio(),
+        horaFin: horario.getHoraFin(),
+        disponible: horario.estaDisponible()
+    };
+}
+
+// ==========================================
 // CREAR HORARIO
+// ==========================================
 
 function crearHorario(req, res) {
+
     try {
+
+        // Verificar permisos
+        if (!esEncargado(req)) {
+            return responderError(
+                res,
+                403,
+                "Solo el encargado SEEA puede crear horarios"
+            );
+        }
+
         const {
             fecha,
             horaInicio,
             horaFin
-        } = req.body;
+        } = req.body || {};
 
+        // Validar campos obligatorios
         if (!fecha || !horaInicio || !horaFin) {
-            return res.status(400).json({
-                mensaje: "Faltan datos del horario"
-            });
+            return responderError(
+                res,
+                400,
+                "Faltan datos del horario"
+            );
         }
 
+        // Crear horario
         const horario = new Horario(
             datos.generarId("horario"),
             fecha,
@@ -24,96 +84,141 @@ function crearHorario(req, res) {
             horaFin
         );
 
+        // Comprobar traslapes
         const traslapado = datos.horarios.some(
-            h => h.seTraslapaCon(horario)
+            existente =>
+                existente.seTraslapaCon(horario)
         );
 
         if (traslapado) {
-            return res.status(409).json({
-                mensaje: "El horario se traslapa con otro existente"
-            });
+            return responderError(
+                res,
+                409,
+                "El horario se traslapa con otro existente"
+            );
         }
 
+        // Guardar horario
         datos.horarios.push(horario);
 
         return res.status(201).json({
             mensaje: "Horario creado correctamente",
-            horario
+            horario: horarioDTO(horario)
         });
 
     } catch (error) {
-        return res.status(400).json({
-            mensaje: error.message
-        });
+
+        return responderError(
+            res,
+            400,
+            error.message
+        );
     }
 }
 
-// OBTENER HORARIOS
+// ==========================================
+// CONSULTAR TODOS LOS HORARIOS
+// ==========================================
 
 function obtenerHorarios(req, res) {
-    return res.status(200).json(datos.horarios);
+
+    return res.status(200).json(
+        datos.horarios.map(horarioDTO)
+    );
 }
 
-// OBTENER DISPONIBLES
+// ==========================================
+// CONSULTAR HORARIOS DISPONIBLES
+// ==========================================
 
 function obtenerDisponibles(req, res) {
+
     const disponibles = datos.horarios.filter(
-        h => h.estaDisponible()
+        horario => horario.estaDisponible()
     );
 
-    return res.status(200).json(disponibles);
+    return res.status(200).json(
+        disponibles.map(horarioDTO)
+    );
 }
 
-// BUSCAR HORARIO
+// ==========================================
+// BUSCAR HORARIO POR ID
+// ==========================================
 
 function buscarHorario(req, res) {
-    const id = Number(req.params.id);
 
-    const horario = datos.horarios.find(
-        h => h.getId() === id
+    const horario = buscarHorarioPorId(
+        req.params.id
     );
 
     if (!horario) {
-        return res.status(404).json({
-            mensaje: "Horario no encontrado"
-        });
+        return responderError(
+            res,
+            404,
+            "Horario no encontrado"
+        );
     }
 
-    return res.status(200).json(horario);
+    return res.status(200).json(
+        horarioDTO(horario)
+    );
 }
 
+// ==========================================
 // ELIMINAR HORARIO
+// ==========================================
 
 function eliminarHorario(req, res) {
-    const id = Number(req.params.id);
 
-    const posicion = datos.horarios.findIndex(
-        h => h.getId() === id
+    // Verificar permisos
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo el encargado SEEA puede eliminar horarios"
+        );
+    }
+
+    const horario = buscarHorarioPorId(
+        req.params.id
     );
 
-    if (posicion === -1) {
-        return res.status(404).json({
-            mensaje: "Horario no encontrado"
-        });
+    if (!horario) {
+        return responderError(
+            res,
+            404,
+            "Horario no encontrado"
+        );
     }
 
-    const horario = datos.horarios[posicion];
-
+    // No eliminar horarios reservados
     if (!horario.estaDisponible()) {
-        return res.status(409).json({
-            mensaje: "No se puede eliminar un horario ocupado"
-        });
+        return responderError(
+            res,
+            409,
+            "No se puede eliminar un horario ocupado"
+        );
     }
 
+    // Verificar solicitudes asociadas
     const tieneSolicitudes = datos.solicitudes.some(
-        s => s.getHorario().getId() === id
+        solicitud =>
+            solicitud.getHorario() === horario
     );
 
     if (tieneSolicitudes) {
-        return res.status(409).json({
-            mensaje: "No se puede eliminar un horario asociado a solicitudes"
-        });
+        return responderError(
+            res,
+            409,
+            "No se puede eliminar un horario asociado a solicitudes"
+        );
     }
+
+    // Eliminar horario
+    const posicion = datos.horarios.indexOf(
+        horario
+    );
 
     datos.horarios.splice(posicion, 1);
 
@@ -122,10 +227,15 @@ function eliminarHorario(req, res) {
     });
 }
 
+// ==========================================
+// EXPORTACIONES
+// ==========================================
+
 module.exports = {
     crearHorario,
     obtenerHorarios,
     obtenerDisponibles,
     buscarHorario,
-    eliminarHorario
+    eliminarHorario,
+    horarioDTO
 };

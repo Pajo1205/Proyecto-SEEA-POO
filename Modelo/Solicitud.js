@@ -1,4 +1,9 @@
+
 class Solicitud {
+
+    // ==========================================
+    // CONSTRUCTOR
+    // ==========================================
 
     constructor(
         id,
@@ -13,108 +18,250 @@ class Solicitud {
         solicitaTaller,
         observaciones = ""
     ) {
+
+        // Validar colegio y horario
         if (!colegio || !horario) {
             throw new Error(
                 "La solicitud necesita un colegio y un horario."
             );
         }
 
-        if (!Number.isInteger(cantidadEstudiantes) ||
+        // Validar cantidad de participantes
+        if (
+            !Number.isInteger(cantidadEstudiantes) ||
             cantidadEstudiantes <= 0 ||
             !Number.isInteger(cantidadProfesores) ||
-            cantidadProfesores < 0) {
-            throw new Error("Cantidad de participantes inválida.");
-        }
-
-        if (!solicitaTour && !solicitaCharla && !solicitaTaller) {
-            throw new Error("Debe seleccionar una actividad.");
-        }
-
-        if (solicitaTaller && !colegio.puedeSolicitarTaller()) {
+            cantidadProfesores < 0
+        ) {
             throw new Error(
-                "Este colegio no tiene habilitada la opción de taller."
+                "Cantidad de participantes invalida."
             );
         }
 
+        // Validar actividades
+        if (
+            !solicitaTour &&
+            !solicitaCharla &&
+            !solicitaTaller
+        ) {
+            throw new Error(
+                "Debe seleccionar al menos una actividad."
+            );
+        }
+
+        // Validar talleres para colegios aliados
+        if (
+            solicitaTaller &&
+            !colegio.puedeSolicitarTaller()
+        ) {
+            throw new Error(
+                "Este colegio no tiene habilitada la opcion de taller."
+            );
+        }
+
+        // Atributos
         this.id = id;
         this.colegio = colegio;
         this.horario = horario;
+
         this.cantidadEstudiantes = cantidadEstudiantes;
         this.cantidadProfesores = cantidadProfesores;
+
         this.grado = grado;
         this.transporte = transporte;
-        this.solicitaTour = solicitaTour;
-        this.solicitaCharla = solicitaCharla;
-        this.solicitaTaller = solicitaTaller;
+
+        this.solicitaTour = Boolean(solicitaTour);
+        this.solicitaCharla = Boolean(solicitaCharla);
+        this.solicitaTaller = Boolean(solicitaTaller);
+
         this.observaciones = observaciones;
+
         this.estado = "PENDIENTE";
     }
 
+    // ==========================================
     // GETTERS
+    // ==========================================
 
-    getId() { return this.id; }
-    getColegio() { return this.colegio; }
-    getHorario() { return this.horario; }
-    getCantidadEstudiantes() { return this.cantidadEstudiantes; }
-    getCantidadProfesores() { return this.cantidadProfesores; }
-    getGrado() { return this.grado; }
-    getTransporte() { return this.transporte; }
-    getSolicitaTour() { return this.solicitaTour; }
-    getSolicitaCharla() { return this.solicitaCharla; }
-    getSolicitaTaller() { return this.solicitaTaller; }
-    getObservaciones() { return this.observaciones; }
-    getEstado() { return this.estado; }
+    getId() {
+        return this.id;
+    }
 
+    getColegio() {
+        return this.colegio;
+    }
+
+    getHorario() {
+        return this.horario;
+    }
+
+    getCantidadEstudiantes() {
+        return this.cantidadEstudiantes;
+    }
+
+    getCantidadProfesores() {
+        return this.cantidadProfesores;
+    }
+
+    getGrado() {
+        return this.grado;
+    }
+
+    getTransporte() {
+        return this.transporte;
+    }
+
+    getSolicitaTour() {
+        return this.solicitaTour;
+    }
+
+    getSolicitaCharla() {
+        return this.solicitaCharla;
+    }
+
+    getSolicitaTaller() {
+        return this.solicitaTaller;
+    }
+
+    getObservaciones() {
+        return this.observaciones;
+    }
+
+    getEstado() {
+        return this.estado;
+    }
+
+    // ==========================================
     // SETTERS
+    // ==========================================
 
     setCantidadEstudiantes(cantidad) {
-        if (!Number.isInteger(cantidad) || cantidad <= 0) {
+
+        if (!this.puedeEditar()) {
+            return false;
+        }
+
+        if (
+            !Number.isInteger(cantidad) ||
+            cantidad <= 0
+        ) {
             return false;
         }
 
         this.cantidadEstudiantes = cantidad;
+
         return true;
     }
 
     setCantidadProfesores(cantidad) {
-        if (!Number.isInteger(cantidad) || cantidad < 0) {
+
+        if (!this.puedeEditar()) {
+            return false;
+        }
+
+        if (
+            !Number.isInteger(cantidad) ||
+            cantidad < 0
+        ) {
             return false;
         }
 
         this.cantidadProfesores = cantidad;
+
         return true;
     }
 
     setGrado(grado) {
-        this.grado = grado;
-    }
 
-    setTransporte(transporte) {
-        this.transporte = transporte;
-    }
-
-    setObservaciones(observaciones) {
-        this.observaciones = observaciones;
-    }
-
-    setSolicitaTour(valor) {
-        this.solicitaTour = valor;
-    }
-
-    setSolicitaCharla(valor) {
-        this.solicitaCharla = valor;
-    }
-
-    setSolicitaTaller(valor) {
-        if (valor && !this.colegio.puedeSolicitarTaller()) {
+        if (!this.puedeEditar()) {
             return false;
         }
 
-        this.solicitaTaller = valor;
+        this.grado = grado;
+
         return true;
     }
 
+    setTransporte(transporte) {
+
+        if (!this.puedeEditar()) {
+            return false;
+        }
+
+        this.transporte = transporte;
+
+        return true;
+    }
+
+    setObservaciones(observaciones) {
+
+        if (!this.puedeEditar()) {
+            return false;
+        }
+
+        this.observaciones = observaciones;
+
+        return true;
+    }
+
+    // ==========================================
+    // VALIDAR CAMBIOS DE ACTIVIDADES
+    // ==========================================
+
+    actualizarActividades(tour, charla, taller) {
+
+        if (!this.puedeEditar()) {
+            return false;
+        }
+
+        if (!tour && !charla && !taller) {
+            return false;
+        }
+
+        if (
+            taller &&
+            !this.colegio.puedeSolicitarTaller()
+        ) {
+            return false;
+        }
+
+        this.solicitaTour = Boolean(tour);
+        this.solicitaCharla = Boolean(charla);
+        this.solicitaTaller = Boolean(taller);
+
+        return true;
+    }
+
+    setSolicitaTour(valor) {
+
+        return this.actualizarActividades(
+            Boolean(valor),
+            this.solicitaCharla,
+            this.solicitaTaller
+        );
+    }
+
+    setSolicitaCharla(valor) {
+
+        return this.actualizarActividades(
+            this.solicitaTour,
+            Boolean(valor),
+            this.solicitaTaller
+        );
+    }
+
+    setSolicitaTaller(valor) {
+
+        return this.actualizarActividades(
+            this.solicitaTour,
+            this.solicitaCharla,
+            Boolean(valor)
+        );
+    }
+
+    // ==========================================
     // ESTADOS
+    // ==========================================
 
     estaPendiente() {
         return this.estado === "PENDIENTE";
@@ -129,14 +276,28 @@ class Solicitud {
     }
 
     tieneActividadSeleccionada() {
-        return this.solicitaTour ||
+
+        return (
+            this.solicitaTour ||
             this.solicitaCharla ||
-            this.solicitaTaller;
+            this.solicitaTaller
+        );
     }
 
-    // RESERVAS
+    puedeEditar() {
+
+        return (
+            this.estado === "PENDIENTE" ||
+            this.estado === "APROBADA"
+        );
+    }
+
+    // ==========================================
+    // APROBAR SOLICITUD
+    // ==========================================
 
     aprobar(horariosOcupados = []) {
+
         if (!this.estaPendiente()) {
             return false;
         }
@@ -147,7 +308,6 @@ class Solicitud {
 
         const hayConflicto = horariosOcupados.some(
             ocupado =>
-                ocupado !== this.horario &&
                 ocupado.seTraslapaCon(this.horario)
         );
 
@@ -160,50 +320,77 @@ class Solicitud {
         }
 
         this.estado = "APROBADA";
+
         return true;
     }
 
+    // ==========================================
+    // RECHAZAR SOLICITUD
+    // ==========================================
+
     rechazar() {
+
         if (!this.estaPendiente()) {
             return false;
         }
 
         this.estado = "RECHAZADA";
+
         return true;
     }
 
+    // ==========================================
+    // CANCELAR SOLICITUD
+    // ==========================================
+
     cancelar() {
-        if (this.estado === "CANCELADA" ||
+
+        if (
+            this.estado === "CANCELADA" ||
             this.estado === "RECHAZADA" ||
-            this.estado === "FINALIZADA") {
+            this.estado === "FINALIZADA"
+        ) {
             return false;
         }
 
         if (this.estaAprobada()) {
+
             this.horario.liberar();
         }
 
         this.estado = "CANCELADA";
+
         return true;
     }
 
+    // ==========================================
     // CAMBIAR HORARIO
+    // ==========================================
 
-    cambiarHorario(nuevoHorario, horariosOcupados = []) {
-        if (!nuevoHorario ||
-            !nuevoHorario.estaDisponible()) {
+    cambiarHorario(
+        nuevoHorario,
+        horariosOcupados = []
+    ) {
+
+        if (!this.puedeEditar()) {
             return false;
         }
 
-        if (this.estado !== "PENDIENTE" &&
-            this.estado !== "APROBADA") {
+        if (!nuevoHorario) {
             return false;
         }
 
+        // Si es el mismo horario, no cambiar
         if (nuevoHorario === this.horario) {
             return true;
         }
 
+        // Verificar disponibilidad
+        if (!nuevoHorario.estaDisponible()) {
+            return false;
+        }
+
+        // Verificar conflictos
         const hayConflicto = horariosOcupados.some(
             ocupado =>
                 ocupado !== this.horario &&
@@ -216,7 +403,10 @@ class Solicitud {
 
         const horarioAnterior = this.horario;
 
+        // Si estaba aprobada, reservar primero
+        // el nuevo horario antes de liberar el anterior
         if (this.estaAprobada()) {
+
             if (!nuevoHorario.reservar()) {
                 return false;
             }
@@ -225,10 +415,13 @@ class Solicitud {
         }
 
         this.horario = nuevoHorario;
+
         return true;
     }
 
+    // ==========================================
     // EDITAR DATOS
+    // ==========================================
 
     editarDatos(
         cantidadEstudiantes,
@@ -237,15 +430,23 @@ class Solicitud {
         transporte,
         observaciones
     ) {
-        if (!Number.isInteger(cantidadEstudiantes) ||
+
+        if (!this.puedeEditar()) {
+            return false;
+        }
+
+        if (
+            !Number.isInteger(cantidadEstudiantes) ||
             cantidadEstudiantes <= 0 ||
             !Number.isInteger(cantidadProfesores) ||
-            cantidadProfesores < 0) {
+            cantidadProfesores < 0
+        ) {
             return false;
         }
 
         this.cantidadEstudiantes = cantidadEstudiantes;
         this.cantidadProfesores = cantidadProfesores;
+
         this.grado = grado;
         this.transporte = transporte;
         this.observaciones = observaciones;
@@ -253,12 +454,15 @@ class Solicitud {
         return true;
     }
 
+    // ==========================================
     // TO STRING
+    // ==========================================
 
     toString() {
+
         return `Solicitud #${this.id}
-Colegio: ${this.colegio}
-Horario: ${this.horario}
+Colegio: ${this.colegio.getNombre()}
+Horario: ${this.horario.getFecha()}
 Estudiantes: ${this.cantidadEstudiantes}
 Profesores: ${this.cantidadProfesores}
 Grado: ${this.grado}
@@ -270,5 +474,9 @@ Estado: ${this.estado}
 Observaciones: ${this.observaciones}`;
     }
 }
+
+// ==========================================
+// EXPORTAR CLASE
+// ==========================================
 
 module.exports = Solicitud;

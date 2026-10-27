@@ -1,229 +1,532 @@
+
 const Solicitud = require("../Modelo/Solicitud");
 const datos = require("../datos");
 
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
+
+function responderError(res, codigo, mensaje) {
+    return res.status(codigo).json({ mensaje });
+}
+
+function buscarSolicitudPorId(id) {
+    return datos.solicitudes.find(
+        solicitud => solicitud.getId() === Number(id)
+    );
+}
+
+function buscarColegioPorId(id) {
+    return datos.colegios.find(
+        colegio => colegio.getId() === Number(id)
+    );
+}
+
+function buscarHorarioPorId(id) {
+    return datos.horarios.find(
+        horario => horario.getId() === Number(id)
+    );
+}
+
+function buscarVisitaPorSolicitud(solicitud) {
+    return datos.visitas.find(
+        visita => visita.getSolicitud() === solicitud
+    );
+}
+
+// ==========================================
+// PERMISOS
+// ==========================================
+
+function tieneAcceso(req, solicitud) {
+
+    if (!req.usuario) {
+        return false;
+    }
+
+    if (req.usuario.rol === "SEEA") {
+        return true;
+    }
+
+    return (
+        req.usuario.rol === "COLEGIO" &&
+        solicitud.getColegio() === req.usuario.getColegio()
+    );
+}
+
+function esEncargado(req) {
+    return req.usuario?.rol === "SEEA";
+}
+
+// ==========================================
+// CONVERTIR SOLICITUD A JSON
+// ==========================================
+
+function solicitudDTO(solicitud) {
+
+    const colegio = solicitud.getColegio();
+    const horario = solicitud.getHorario();
+
+    return {
+        id: solicitud.getId(),
+
+        colegio: {
+            id: colegio.getId(),
+            nombre: colegio.getNombre(),
+            aliado: colegio.getAliado()
+        },
+
+        horario: {
+            id: horario.getId(),
+            fecha: horario.getFecha(),
+            horaInicio: horario.getHoraInicio(),
+            horaFin: horario.getHoraFin(),
+            disponible: horario.estaDisponible()
+        },
+
+        cantidadEstudiantes:
+            solicitud.getCantidadEstudiantes(),
+
+        cantidadProfesores:
+            solicitud.getCantidadProfesores(),
+
+        grado: solicitud.getGrado(),
+
+        transporte: solicitud.getTransporte(),
+
+        solicitaTour: solicitud.getSolicitaTour(),
+
+        solicitaCharla: solicitud.getSolicitaCharla(),
+
+        solicitaTaller: solicitud.getSolicitaTaller(),
+
+        observaciones: solicitud.getObservaciones(),
+
+        estado: solicitud.getEstado()
+    };
+}
+
+// ==========================================
 // CREAR SOLICITUD
+// ==========================================
 
 function crearSolicitud(req, res) {
+
     try {
-        const {
-            idColegio,
-            idHorario,
-            cantidadEstudiantes,
-            cantidadProfesores,
-            grado,
-            transporte,
-            solicitaTour,
-            solicitaCharla,
-            solicitaTaller,
-            observaciones
-        } = req.body;
 
-        const colegio = datos.colegios.find(
-            c => c.getId() === Number(idColegio)
-        );
+        if (!req.usuario) {
+            return responderError(
+                res,
+                401,
+                "Debes iniciar sesion"
+            );
+        }
 
-        const horario = datos.horarios.find(
-            h => h.getId() === Number(idHorario)
+        if (!["SEEA", "COLEGIO"].includes(req.usuario.rol)) {
+            return responderError(
+                res,
+                403,
+                "No tienes permiso para crear solicitudes"
+            );
+        }
+
+        const body = req.body || {};
+
+        // El colegio se obtiene de la sesion
+        // cuando el usuario es de tipo COLEGIO.
+        const colegio = req.usuario.rol === "COLEGIO"
+            ? req.usuario.getColegio()
+            : buscarColegioPorId(body.idColegio);
+
+        const horario = buscarHorarioPorId(
+            body.idHorario
         );
 
         if (!colegio || !horario) {
-            return res.status(404).json({
-                mensaje: "Colegio u horario no encontrado"
-            });
+            return responderError(
+                res,
+                404,
+                "Colegio u horario no encontrado"
+            );
         }
 
         if (!horario.estaDisponible()) {
-            return res.status(409).json({
-                mensaje: "El horario no esta disponible"
-            });
+            return responderError(
+                res,
+                409,
+                "El horario no esta disponible"
+            );
         }
 
         const solicitud = new Solicitud(
             datos.generarId("solicitud"),
             colegio,
             horario,
-            cantidadEstudiantes,
-            cantidadProfesores,
-            grado,
-            transporte,
-            solicitaTour,
-            solicitaCharla,
-            solicitaTaller,
-            observaciones || ""
+            body.cantidadEstudiantes,
+            body.cantidadProfesores,
+            body.grado,
+            body.transporte,
+            body.solicitaTour,
+            body.solicitaCharla,
+            body.solicitaTaller,
+            body.observaciones || ""
         );
 
         datos.solicitudes.push(solicitud);
 
         return res.status(201).json({
             mensaje: "Solicitud creada correctamente",
-            solicitud
+            solicitud: solicitudDTO(solicitud)
         });
 
     } catch (error) {
-        return res.status(400).json({
-            mensaje: error.message
-        });
+        return responderError(
+            res,
+            400,
+            error.message
+        );
     }
 }
 
+// ==========================================
 // CONSULTAR SOLICITUDES
+// ==========================================
 
 function obtenerSolicitudes(req, res) {
-    return res.status(200).json(datos.solicitudes);
-}
 
-// BUSCAR SOLICITUD
-
-function buscarSolicitud(req, res) {
-    const id = Number(req.params.id);
-
-    const solicitud = datos.solicitudes.find(
-        s => s.getId() === id
-    );
-
-    if (!solicitud) {
-        return res.status(404).json({
-            mensaje: "Solicitud no encontrada"
-        });
+    if (!req.usuario) {
+        return responderError(
+            res,
+            401,
+            "Debes iniciar sesion"
+        );
     }
 
-    return res.status(200).json(solicitud);
+    if (!["SEEA", "COLEGIO"].includes(req.usuario.rol)) {
+        return responderError(
+            res,
+            403,
+            "No tienes permiso para consultar solicitudes"
+        );
+    }
+
+    const solicitudes = datos.solicitudes.filter(
+        solicitud => tieneAcceso(req, solicitud)
+    );
+
+    return res.status(200).json(
+        solicitudes.map(solicitudDTO)
+    );
 }
 
-// APROBAR SOLICITUD
+// ==========================================
+// BUSCAR SOLICITUD
+// ==========================================
 
-function aprobarSolicitud(req, res) {
-    const id = Number(req.params.id);
+function buscarSolicitud(req, res) {
 
-    const solicitud = datos.solicitudes.find(
-        s => s.getId() === id
+    const solicitud = buscarSolicitudPorId(
+        req.params.id
     );
 
     if (!solicitud) {
-        return res.status(404).json({
-            mensaje: "Solicitud no encontrada"
-        });
+        return responderError(
+            res,
+            404,
+            "Solicitud no encontrada"
+        );
+    }
+
+    if (!tieneAcceso(req, solicitud)) {
+        return responderError(
+            res,
+            403,
+            "No tienes permiso para consultar esta solicitud"
+        );
+    }
+
+    return res.status(200).json(
+        solicitudDTO(solicitud)
+    );
+}
+
+// ==========================================
+// APROBAR SOLICITUD
+// ==========================================
+
+function aprobarSolicitud(req, res) {
+
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo SEEA puede aprobar solicitudes"
+        );
+    }
+
+    const solicitud = buscarSolicitudPorId(
+        req.params.id
+    );
+
+    if (!solicitud) {
+        return responderError(
+            res,
+            404,
+            "Solicitud no encontrada"
+        );
     }
 
     const horariosOcupados = datos.solicitudes
-        .filter(s => s.estaAprobada())
+        .filter(
+            s => s !== solicitud && s.estaAprobada()
+        )
         .map(s => s.getHorario());
 
     if (!solicitud.aprobar(horariosOcupados)) {
-        return res.status(409).json({
-            mensaje: "No se pudo aprobar la solicitud"
-        });
+        return responderError(
+            res,
+            409,
+            "No se pudo aprobar la solicitud"
+        );
     }
 
     return res.status(200).json({
         mensaje: "Solicitud aprobada correctamente",
-        solicitud
+        solicitud: solicitudDTO(solicitud)
     });
 }
 
+// ==========================================
 // RECHAZAR SOLICITUD
+// ==========================================
 
 function rechazarSolicitud(req, res) {
-    const id = Number(req.params.id);
 
-    const solicitud = datos.solicitudes.find(
-        s => s.getId() === id
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo SEEA puede rechazar solicitudes"
+        );
+    }
+
+    const solicitud = buscarSolicitudPorId(
+        req.params.id
     );
 
     if (!solicitud) {
-        return res.status(404).json({
-            mensaje: "Solicitud no encontrada"
-        });
+        return responderError(
+            res,
+            404,
+            "Solicitud no encontrada"
+        );
     }
 
     if (!solicitud.rechazar()) {
-        return res.status(409).json({
-            mensaje: "No se puede rechazar esta solicitud"
-        });
+        return responderError(
+            res,
+            409,
+            "No se puede rechazar esta solicitud"
+        );
     }
 
     return res.status(200).json({
         mensaje: "Solicitud rechazada",
-        solicitud
+        solicitud: solicitudDTO(solicitud)
     });
 }
 
+// ==========================================
 // CANCELAR SOLICITUD
+// ==========================================
 
 function cancelarSolicitud(req, res) {
-    const id = Number(req.params.id);
 
-    const solicitud = datos.solicitudes.find(
-        s => s.getId() === id
+    const solicitud = buscarSolicitudPorId(
+        req.params.id
     );
 
     if (!solicitud) {
-        return res.status(404).json({
-            mensaje: "Solicitud no encontrada"
-        });
+        return responderError(
+            res,
+            404,
+            "Solicitud no encontrada"
+        );
     }
 
-    const visita = datos.visitas.find(
-        v => v.getSolicitud().getId() === id
+    if (!tieneAcceso(req, solicitud)) {
+        return responderError(
+            res,
+            403,
+            "No tienes permiso para cancelar esta solicitud"
+        );
+    }
+
+    const visita = buscarVisitaPorSolicitud(
+        solicitud
     );
 
-    if (visita && (
-        visita.getEstado() === "EN_CURSO" ||
-        visita.getEstado() === "FINALIZADA"
-    )) {
-        return res.status(409).json({
-            mensaje: "No se puede cancelar una visita iniciada o finalizada"
-        });
+    // No cancelar visitas iniciadas o finalizadas
+    if (
+        visita &&
+        !["PROGRAMADA", "CANCELADA"].includes(
+            visita.getEstado()
+        )
+    ) {
+        return responderError(
+            res,
+            409,
+            "La visita ya inicio o finalizo"
+        );
     }
 
     if (!solicitud.cancelar()) {
-        return res.status(409).json({
-            mensaje: "No se puede cancelar esta solicitud"
-        });
+        return responderError(
+            res,
+            409,
+            "No se puede cancelar esta solicitud"
+        );
     }
 
-    if (visita && visita.getEstado() === "PROGRAMADA") {
+    // Cancelar visita asociada
+    if (
+        visita &&
+        visita.getEstado() === "PROGRAMADA"
+    ) {
         visita.cancelar();
     }
 
     return res.status(200).json({
         mensaje: "Solicitud cancelada correctamente",
-        solicitud
+        solicitud: solicitudDTO(solicitud)
     });
 }
 
-// ELIMINAR SOLICITUD
+// ==========================================
+// REAGENDAR SOLICITUD
+// ==========================================
 
-function eliminarSolicitud(req, res) {
-    const id = Number(req.params.id);
+function reagendarSolicitud(req, res) {
 
-    const posicion = datos.solicitudes.findIndex(
-        s => s.getId() === id
+    const solicitud = buscarSolicitudPorId(
+        req.params.id
     );
 
-    if (posicion === -1) {
-        return res.status(404).json({
-            mensaje: "Solicitud no encontrada"
-        });
+    if (!solicitud) {
+        return responderError(
+            res,
+            404,
+            "Solicitud no encontrada"
+        );
     }
 
-    const solicitud = datos.solicitudes[posicion];
+    if (!tieneAcceso(req, solicitud)) {
+        return responderError(
+            res,
+            403,
+            "No tienes permiso para reagendar esta solicitud"
+        );
+    }
 
+    // No reagendar una visita ya creada
+    const visita = buscarVisitaPorSolicitud(
+        solicitud
+    );
+
+    if (visita) {
+        return responderError(
+            res,
+            409,
+            "La solicitud ya tiene una visita programada"
+        );
+    }
+
+    const nuevoHorario = buscarHorarioPorId(
+        req.body?.idHorario
+    );
+
+    if (!nuevoHorario) {
+        return responderError(
+            res,
+            404,
+            "Horario no encontrado"
+        );
+    }
+
+    const horariosOcupados = datos.solicitudes
+        .filter(
+            s => s !== solicitud && s.estaAprobada()
+        )
+        .map(s => s.getHorario());
+
+    if (!solicitud.cambiarHorario(
+        nuevoHorario,
+        horariosOcupados
+    )) {
+        return responderError(
+            res,
+            409,
+            "No se puede reagendar la solicitud"
+        );
+    }
+
+    return res.status(200).json({
+        mensaje: "Solicitud reagendada correctamente",
+        solicitud: solicitudDTO(solicitud)
+    });
+}
+
+// ==========================================
+// ELIMINAR SOLICITUD
+// ==========================================
+
+function eliminarSolicitud(req, res) {
+
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo SEEA puede eliminar solicitudes"
+        );
+    }
+
+    const solicitud = buscarSolicitudPorId(
+        req.params.id
+    );
+
+    if (!solicitud) {
+        return responderError(
+            res,
+            404,
+            "Solicitud no encontrada"
+        );
+    }
+
+    // No eliminar solicitudes con visitas
     const tieneVisita = datos.visitas.some(
-        v => v.getSolicitud().getId() === id
+        visita => visita.getSolicitud() === solicitud
     );
 
     if (tieneVisita) {
-        return res.status(409).json({
-            mensaje: "No se puede eliminar una solicitud con visita asociada"
-        });
+        return responderError(
+            res,
+            409,
+            "La solicitud tiene una visita asociada"
+        );
     }
 
+    // No eliminar solicitudes aprobadas
     if (solicitud.estaAprobada()) {
-        return res.status(409).json({
-            mensaje: "Primero debe cancelar la solicitud aprobada"
-        });
+        return responderError(
+            res,
+            409,
+            "Primero debes cancelar la solicitud aprobada"
+        );
     }
+
+    const posicion = datos.solicitudes.indexOf(
+        solicitud
+    );
 
     datos.solicitudes.splice(posicion, 1);
 
@@ -232,6 +535,10 @@ function eliminarSolicitud(req, res) {
     });
 }
 
+// ==========================================
+// EXPORTACIONES
+// ==========================================
+
 module.exports = {
     crearSolicitud,
     obtenerSolicitudes,
@@ -239,5 +546,7 @@ module.exports = {
     aprobarSolicitud,
     rechazarSolicitud,
     cancelarSolicitud,
-    eliminarSolicitud
+    reagendarSolicitud,
+    eliminarSolicitud,
+    solicitudDTO
 };

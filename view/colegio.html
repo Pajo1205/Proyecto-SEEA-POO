@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Portal de Colegios | SEEA - UVG</title>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+    <!-- ESTRUCTURA PRINCIPAL -->
+
+    <div class="layout">
+
+        <!-- BARRA LATERAL -->
+
+        <aside class="sidebar">
+
+            <div class="brand-mark">
+                UVG <span>SEEA</span>
+            </div>
+
+            <p class="sidebar-sub">
+                Portal de instituciones educativas
+            </p>
+
+            <!-- MENU DINAMICO -->
+
+            <nav id="nav">
+                <!-- colegio.js genera las opciones -->
+            </nav>
+
+            <button
+                type="button"
+                id="salir"
+                class="ghost"
+            >
+                Cerrar sesión
+            </button>
+
+        </aside>
+
+        <!-- AREA PRINCIPAL -->
+
+        <div class="main-area">
+
+            <!-- BARRA SUPERIOR -->
+
+            <header class="topbar">
+
+                <button
+                    type="button"
+                    id="menu-movil"
+                    class="mobile-menu"
+                    aria-label="Abrir menú"
+                >
+                    ☰
+                </button>
+
+                <span id="titulo-pagina">
+                    Portal de Colegios
+                </span>
+
+                <span id="identidad">
+                    Cargando usuario...
+                </span>
+
+            </header>
+
+            <!-- CONTENIDO -->
+
+            <main class="content">
+
+                <!-- MENSAJES -->
+
+                <div
+                    id="aviso"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+                <!-- CONTENIDO DINAMICO -->
+
+                <div id="contenido"></div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT COMPARTIDO -->
+
+    <script
+        src="/comun.js"
+        defer
+    ></script>
+
+    <!-- JAVASCRIPT DEL COLEGIO -->
+
+    <script
+        src="/colegio.js"
+        defer
+    ></script>
+
+</body>
+</html>

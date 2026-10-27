@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- ==========================================
+         CONFIGURACION GENERAL
+    =========================================== -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Portal Voluntario | SEEA - UVG</title>
+
+    <!-- ==========================================
+         ESTILOS DEL SISTEMA
+    =========================================== -->
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+<body>
+
+    <!-- ==========================================
+         ESTRUCTURA PRINCIPAL
+    =========================================== -->
+
+    <div class="layout">
+
+        <!-- ==================================
+             BARRA LATERAL
+        =================================== -->
+
+        <aside class="sidebar">
+
+            <!-- IDENTIDAD VISUAL UVG / SEEA -->
+
+            <div class="brand-mark">
+                UVG <span>SEEA</span>
+            </div>
+
+            <p class="sidebar-sub">
+                Portal de Voluntarios
+            </p>
+
+            <!-- ==================================
+                 MENU DE NAVEGACION
+            =================================== -->
+
+            <nav
+                id="nav"
+                aria-label="Navegación del voluntario"
+            >
+                <!--
+                    Las opciones del menú se
+                    generan desde voluntario.js
+                    utilizando SEEA.navegar().
+                -->
+            </nav>
+
+            <!-- ==================================
+                 CERRAR SESION
+            =================================== -->
+
+            <button
+                type="button"
+                id="salir"
+                class="ghost"
+            >
+                Cerrar sesión
+            </button>
+
+        </aside>
+
+        <!-- ==================================
+             AREA PRINCIPAL
+        =================================== -->
+
+        <div class="main-area">
+
+            <!-- ==================================
+                 BARRA SUPERIOR
+            =================================== -->
+
+            <header class="topbar">
+
+                <!-- MENU PARA CELULARES -->
+
+                <button
+                    type="button"
+                    id="menu-movil"
+                    class="mobile-menu"
+                    aria-label="Abrir menú"
+                    aria-expanded="false"
+                >
+                    ☰
+                </button>
+
+                <!-- TITULO DE LA PAGINA -->
+
+                <span id="titulo-pagina">
+                    Portal de Voluntarios
+                </span>
+
+                <!-- INFORMACION DEL USUARIO -->
+
+                <span id="identidad">
+                    Cargando usuario...
+                </span>
+
+            </header>
+
+            <!-- ==================================
+                 CONTENIDO PRINCIPAL
+            =================================== -->
+
+            <main class="content">
+
+                <!-- ==================================
+                     MENSAJES DEL SISTEMA
+                =================================== -->
+
+                <div
+                    id="aviso"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+                <!-- ==================================
+                     CONTENIDO DINAMICO
+                =================================== -->
+
+                <div id="contenido">
+
+                    <!--
+                        voluntario.js mostrará aquí:
+
+                        - Visitas disponibles
+                        - Disponibilidad del voluntario
+                        - Mis asignaciones
+                        - Horarios de las visitas
+
+                        El contenido se genera
+                        mediante las funciones
+                        compartidas de comun.js.
+                    -->
+
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+         JAVASCRIPT COMPARTIDO
+    =========================================== -->
+
+    <script
+        src="/comun.js"
+        defer
+    ></script>
+
+    <!-- ==========================================
+         JAVASCRIPT DEL VOLUNTARIO
+    =========================================== -->
+
+    <script
+        src="/voluntario.js"
+        defer
+    ></script>
+
+</body>
+
+</html>

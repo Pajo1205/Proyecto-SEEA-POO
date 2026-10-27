@@ -1,6 +1,16 @@
+
 const Usuario = require("./Usuario");
+const Solicitud = require("./Solicitud");
+
+// ==========================================
+// CLASE USUARIO COLEGIO
+// ==========================================
 
 class UsuarioColegio extends Usuario {
+
+    // ======================================
+    // CONSTRUCTOR
+    // ======================================
 
     constructor(
         id,
@@ -14,15 +24,21 @@ class UsuarioColegio extends Usuario {
         // Atributos heredados de Usuario
         super(id, nombre, correo, contrasena);
 
+        // Identificar el tipo de usuario
+        this.rol = "COLEGIO";
+
         // Atributos propios
         this.telefono = telefono;
         this.colegio = colegio;
     }
 
-
-    // =========================
+    // ======================================
     // GETTERS
-    // =========================
+    // ======================================
+
+    getRol() {
+        return this.rol;
+    }
 
     getTelefono() {
         return this.telefono;
@@ -32,23 +48,35 @@ class UsuarioColegio extends Usuario {
         return this.colegio;
     }
 
-
-    // =========================
+    // ======================================
     // SETTERS
-    // =========================
+    // ======================================
 
     setTelefono(telefono) {
+
+        if (typeof telefono !== "string") {
+            return false;
+        }
+
         this.telefono = telefono;
+
+        return true;
     }
 
     setColegio(colegio) {
+
+        if (colegio == null) {
+            return false;
+        }
+
         this.colegio = colegio;
+
+        return true;
     }
 
-
-    // =========================
-    // SOLICITUDES
-    // =========================
+    // ======================================
+    // CREAR SOLICITUD
+    // ======================================
 
     crearSolicitud(
         id,
@@ -63,12 +91,17 @@ class UsuarioColegio extends Usuario {
         observaciones = ""
     ) {
 
+        // Verificar que tenga colegio
         if (this.colegio == null) {
             return null;
         }
 
-        const Solicitud = require("./Solicitud");
+        // Verificar que exista horario
+        if (horario == null) {
+            return null;
+        }
 
+        // Crear solicitud asociada al colegio
         const solicitud = new Solicitud(
             id,
             this.colegio,
@@ -86,20 +119,28 @@ class UsuarioColegio extends Usuario {
         return solicitud;
     }
 
-
-    // =========================
+    // ======================================
     // TO STRING
-    // =========================
+    // ======================================
 
     toString() {
+
+        const nombreColegio = this.colegio
+            ? this.colegio.getNombre()
+            : "Sin colegio asignado";
 
         return `Usuario Colegio:
 ID: ${this.id}
 Nombre: ${this.nombre}
 Correo: ${this.correo}
+Rol: ${this.rol}
 Teléfono: ${this.telefono}
-Colegio: ${this.colegio}`;
+Colegio: ${nombreColegio}`;
     }
 }
+
+// ==========================================
+// EXPORTAR CLASE
+// ==========================================
 
 module.exports = UsuarioColegio;

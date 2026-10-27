@@ -1,102 +1,51 @@
+
+// ==========================================
+// IMPORTACIONES
+// ==========================================
+
 const Colegio = require("../Modelo/Colegio");
 const datos = require("../datos");
 
-// REGISTRAR COLEGIO
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
 
-function registrarColegio(req, res) {
-    try {
-        const {
-            nombre,
-            direccion,
-            telefono,
-            correo,
-            aliado
-        } = req.body;
+function responderError(res, codigo, mensaje) {
 
-        if (typeof nombre !== "string" || !nombre.trim()) {
-            return res.status(400).json({
-                mensaje: "El nombre del colegio es obligatorio"
-            });
-        }
-
-        if (typeof aliado !== "boolean") {
-            return res.status(400).json({
-                mensaje: "El campo aliado debe ser true o false"
-            });
-        }
-
-        const existe = datos.colegios.some(
-            c => c.getNombre().toLowerCase() ===
-                nombre.trim().toLowerCase()
-        );
-
-        if (existe) {
-            return res.status(409).json({
-                mensaje: "El colegio ya existe"
-            });
-        }
-
-        const colegio = new Colegio(
-            datos.generarId("colegio"),
-            nombre.trim(),
-            direccion || "",
-            telefono || "",
-            correo || "",
-            aliado
-        );
-
-        datos.colegios.push(colegio);
-
-        return res.status(201).json({
-            mensaje: "Colegio registrado correctamente",
-            colegio
-        });
-
-    } catch (error) {
-        return res.status(400).json({
-            mensaje: error.message
-        });
-    }
+    return res.status(codigo).json({
+        mensaje
+    });
 }
 
-// CONSULTAR COLEGIOS
+// Buscar colegio por ID
+function buscarColegioPorId(id) {
 
-function obtenerColegios(req, res) {
-    return res.status(200).json(datos.colegios);
-}
-
-// BUSCAR COLEGIO
-
-function buscarColegio(req, res) {
-    const id = Number(req.params.id);
-
-    const colegio = datos.colegios.find(
-        c => c.getId() === id
+    return datos.colegios.find(
+        colegio => colegio.getId() === Number(id)
     );
-
-    if (!colegio) {
-        return res.status(404).json({
-            mensaje: "Colegio no encontrado"
-        });
-    }
-
-    return res.status(200).json(colegio);
 }
 
-// ACTUALIZAR COLEGIO
+// Verificar si el usuario es encargado SEEA
+function esEncargado(req) {
 
-function actualizarColegio(req, res) {
-    const id = Number(req.params.id);
+    return req.usuario?.rol === "SEEA";
+}
 
-    const colegio = datos.colegios.find(
-        c => c.getId() === id
-    );
+// Convertir colegio a JSON
+function colegioDTO(colegio) {
 
-    if (!colegio) {
-        return res.status(404).json({
-            mensaje: "Colegio no encontrado"
-        });
-    }
+    return {
+        id: colegio.getId(),
+        nombre: colegio.getNombre(),
+        direccion: colegio.getDireccion(),
+        telefono: colegio.getTelefono(),
+        correo: colegio.getCorreo(),
+        aliado: colegio.getAliado()
+    };
+}
+
+// Validar campos de colegio
+function validarDatosColegio(datosColegio) {
 
     const {
         nombre,
@@ -104,82 +53,341 @@ function actualizarColegio(req, res) {
         telefono,
         correo,
         aliado
-    } = req.body;
+    } = datosColegio;
 
-    if (nombre !== undefined) {
-        if (typeof nombre !== "string" || !nombre.trim()) {
-            return res.status(400).json({
-                mensaje: "Nombre invalido"
-            });
+    if (
+        nombre !== undefined &&
+        (
+            typeof nombre !== "string" ||
+            !nombre.trim()
+        )
+    ) {
+        return "El nombre del colegio no es valido";
+    }
+
+    if (
+        direccion !== undefined &&
+        typeof direccion !== "string"
+    ) {
+        return "La direccion debe ser texto";
+    }
+
+    if (
+        telefono !== undefined &&
+        typeof telefono !== "string"
+    ) {
+        return "El telefono debe ser texto";
+    }
+
+    if (
+        correo !== undefined &&
+        (
+            typeof correo !== "string" ||
+            (
+                correo !== "" &&
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
+            )
+        )
+    ) {
+        return "El correo del colegio no es valido";
+    }
+
+    if (
+        aliado !== undefined &&
+        typeof aliado !== "boolean"
+    ) {
+        return "El campo aliado debe ser true o false";
+    }
+
+    return null;
+}
+
+// ==========================================
+// REGISTRAR COLEGIO
+// ==========================================
+
+function registrarColegio(req, res) {
+
+    try {
+
+        if (!esEncargado(req)) {
+            return responderError(
+                res,
+                403,
+                "Solo el encargado SEEA puede registrar colegios"
+            );
         }
 
-        const duplicado = datos.colegios.some(
-            c => c.getId() !== id &&
-                c.getNombre().toLowerCase() ===
+        const {
+            nombre,
+            direccion = "",
+            telefono = "",
+            correo = "",
+            aliado = false
+        } = req.body || {};
+
+        const errorValidacion = validarDatosColegio({
+            nombre,
+            direccion,
+            telefono,
+            correo,
+            aliado
+        });
+
+        if (errorValidacion) {
+            return responderError(
+                res,
+                400,
+                errorValidacion
+            );
+        }
+
+        if (!nombre) {
+            return responderError(
+                res,
+                400,
+                "El nombre del colegio es obligatorio"
+            );
+        }
+
+        // Comprobar colegios duplicados
+        const existe = datos.colegios.some(
+            colegio =>
+                colegio.getNombre().toLowerCase() ===
                 nombre.trim().toLowerCase()
         );
 
+        if (existe) {
+            return responderError(
+                res,
+                409,
+                "El colegio ya existe"
+            );
+        }
+
+        // Crear colegio
+        const colegio = new Colegio(
+            datos.generarId("colegio"),
+            nombre.trim(),
+            direccion,
+            telefono,
+            correo,
+            aliado
+        );
+
+        datos.colegios.push(colegio);
+
+        return res.status(201).json({
+            mensaje: "Colegio registrado correctamente",
+            colegio: colegioDTO(colegio)
+        });
+
+    } catch (error) {
+
+        return responderError(
+            res,
+            400,
+            error.message
+        );
+    }
+}
+
+// ==========================================
+// CONSULTAR COLEGIOS
+// ==========================================
+
+function obtenerColegios(req, res) {
+
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo SEEA puede consultar todos los colegios"
+        );
+    }
+
+    return res.status(200).json(
+        datos.colegios.map(colegioDTO)
+    );
+}
+
+// ==========================================
+// BUSCAR COLEGIO
+// ==========================================
+
+function buscarColegio(req, res) {
+
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo SEEA puede consultar colegios"
+        );
+    }
+
+    const colegio = buscarColegioPorId(
+        req.params.id
+    );
+
+    if (!colegio) {
+        return responderError(
+            res,
+            404,
+            "Colegio no encontrado"
+        );
+    }
+
+    return res.status(200).json(
+        colegioDTO(colegio)
+    );
+}
+
+// ==========================================
+// ACTUALIZAR COLEGIO
+// ==========================================
+
+function actualizarColegio(req, res) {
+
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo SEEA puede modificar colegios"
+        );
+    }
+
+    const colegio = buscarColegioPorId(
+        req.params.id
+    );
+
+    if (!colegio) {
+        return responderError(
+            res,
+            404,
+            "Colegio no encontrado"
+        );
+    }
+
+    const cambios = req.body || {};
+
+    // Validar todos los cambios primero
+    const errorValidacion = validarDatosColegio(
+        cambios
+    );
+
+    if (errorValidacion) {
+        return responderError(
+            res,
+            400,
+            errorValidacion
+        );
+    }
+
+    // Evitar nombres duplicados
+    if (cambios.nombre !== undefined) {
+
+        const duplicado = datos.colegios.some(
+            otro =>
+                otro !== colegio &&
+                otro.getNombre().toLowerCase() ===
+                cambios.nombre.trim().toLowerCase()
+        );
+
         if (duplicado) {
-            return res.status(409).json({
-                mensaje: "Ya existe otro colegio con ese nombre"
-            });
+            return responderError(
+                res,
+                409,
+                "Ya existe otro colegio con ese nombre"
+            );
         }
     }
 
-    if (aliado !== undefined && typeof aliado !== "boolean") {
-        return res.status(400).json({
-            mensaje: "El campo aliado debe ser booleano"
-        });
+    // Aplicar cambios validados
+    if (cambios.nombre !== undefined) {
+        colegio.setNombre(cambios.nombre);
     }
 
-    if (nombre !== undefined) colegio.setNombre(nombre.trim());
-    if (direccion !== undefined) colegio.setDireccion(direccion);
-    if (telefono !== undefined) colegio.setTelefono(telefono);
-    if (correo !== undefined) colegio.setCorreo(correo);
-    if (aliado !== undefined) colegio.setAliado(aliado);
+    if (cambios.direccion !== undefined) {
+        colegio.setDireccion(cambios.direccion);
+    }
+
+    if (cambios.telefono !== undefined) {
+        colegio.setTelefono(cambios.telefono);
+    }
+
+    if (cambios.correo !== undefined) {
+        colegio.setCorreo(cambios.correo);
+    }
+
+    if (cambios.aliado !== undefined) {
+        colegio.setAliado(cambios.aliado);
+    }
 
     return res.status(200).json({
         mensaje: "Colegio actualizado correctamente",
-        colegio
+        colegio: colegioDTO(colegio)
     });
 }
 
+// ==========================================
 // ELIMINAR COLEGIO
+// ==========================================
 
 function eliminarColegio(req, res) {
-    const id = Number(req.params.id);
 
-    const posicion = datos.colegios.findIndex(
-        c => c.getId() === id
-    );
-
-    if (posicion === -1) {
-        return res.status(404).json({
-            mensaje: "Colegio no encontrado"
-        });
+    if (!esEncargado(req)) {
+        return responderError(
+            res,
+            403,
+            "Solo SEEA puede eliminar colegios"
+        );
     }
 
+    const colegio = buscarColegioPorId(
+        req.params.id
+    );
+
+    if (!colegio) {
+        return responderError(
+            res,
+            404,
+            "Colegio no encontrado"
+        );
+    }
+
+    // Verificar solicitudes asociadas
     const tieneSolicitudes = datos.solicitudes.some(
-        s => s.getColegio().getId() === id
+        solicitud =>
+            solicitud.getColegio() === colegio
     );
 
     if (tieneSolicitudes) {
-        return res.status(409).json({
-            mensaje: "No se puede eliminar un colegio con solicitudes"
-        });
+        return responderError(
+            res,
+            409,
+            "No se puede eliminar un colegio con solicitudes"
+        );
     }
 
+    // Verificar usuarios asociados
     const tieneUsuarios = datos.usuarios.some(
-        u => typeof u.getColegio === "function" &&
-            u.getColegio() &&
-            u.getColegio().getId() === id
+        usuario =>
+            typeof usuario.getColegio === "function" &&
+            usuario.getColegio() === colegio
     );
 
     if (tieneUsuarios) {
-        return res.status(409).json({
-            mensaje: "No se puede eliminar un colegio con usuarios asociados"
-        });
+        return responderError(
+            res,
+            409,
+            "No se puede eliminar un colegio con usuarios asociados"
+        );
     }
+
+    // Eliminar colegio
+    const posicion = datos.colegios.indexOf(
+        colegio
+    );
 
     datos.colegios.splice(posicion, 1);
 
@@ -188,10 +396,15 @@ function eliminarColegio(req, res) {
     });
 }
 
+// ==========================================
+// EXPORTACIONES
+// ==========================================
+
 module.exports = {
     registrarColegio,
     obtenerColegios,
     buscarColegio,
     actualizarColegio,
-    eliminarColegio
+    eliminarColegio,
+    colegioDTO
 };

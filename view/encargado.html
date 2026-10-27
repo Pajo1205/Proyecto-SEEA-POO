@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- ======================================
+         CONFIGURACION GENERAL
+    ======================================= -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Portal Encargado | SEEA - UVG</title>
+
+    <!-- ESTILOS DEL SISTEMA -->
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+<body>
+
+    <!-- ======================================
+         ESTRUCTURA PRINCIPAL
+    ======================================= -->
+
+    <div class="layout">
+
+        <!-- ==================================
+             BARRA LATERAL
+        =================================== -->
+
+        <aside class="sidebar">
+
+            <!-- IDENTIDAD UVG / SEEA -->
+
+            <div class="brand-mark">
+                UVG <span>SEEA</span>
+            </div>
+
+            <p class="sidebar-sub">
+                Sistema de Experiencias Educativas
+            </p>
+
+            <!-- NAVEGACION -->
+
+            <nav
+                id="nav"
+                aria-label="Navegación del encargado SEEA"
+            >
+                <!--
+                    Las opciones se generan
+                    desde encargado.js mediante
+                    SEEA.navegar()
+                -->
+            </nav>
+
+            <!-- CERRAR SESION -->
+
+            <button
+                type="button"
+                id="salir"
+                class="ghost"
+            >
+                Cerrar sesión
+            </button>
+
+        </aside>
+
+        <!-- ==================================
+             AREA PRINCIPAL
+        =================================== -->
+
+        <div class="main-area">
+
+            <!-- ==================================
+                 BARRA SUPERIOR
+            =================================== -->
+
+            <header class="topbar">
+
+                <!-- MENU PARA CELULARES -->
+
+                <button
+                    type="button"
+                    id="menu-movil"
+                    class="mobile-menu"
+                    aria-label="Abrir menú"
+                    aria-expanded="false"
+                >
+                    ☰
+                </button>
+
+                <!-- TITULO DE LA SECCION -->
+
+                <span id="titulo-pagina">
+                    Panel Administrativo SEEA
+                </span>
+
+                <!-- USUARIO AUTENTICADO -->
+
+                <span id="identidad">
+                    Cargando usuario...
+                </span>
+
+            </header>
+
+            <!-- ==================================
+                 CONTENIDO PRINCIPAL
+            =================================== -->
+
+            <main class="content">
+
+                <!-- MENSAJES DEL SISTEMA -->
+
+                <div
+                    id="aviso"
+                    role="status"
+                    aria-live="polite"
+                ></div>
+
+                <!-- CONTENIDO DINAMICO -->
+
+                <div id="contenido">
+
+                    <!--
+                        encargado.js genera aquí
+                        las tablas, formularios,
+                        tarjetas y estadísticas.
+                    -->
+
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- ======================================
+         JAVASCRIPT COMPARTIDO
+    ======================================= -->
+
+    <script
+        src="/comun.js"
+        defer
+    ></script>
+
+    <!-- ======================================
+         JAVASCRIPT DEL ENCARGADO
+    ======================================= -->
+
+    <script
+        src="/encargado.js"
+        defer
+    ></script>
+
+</body>
+
+</html>

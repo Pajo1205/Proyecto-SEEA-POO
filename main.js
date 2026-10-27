@@ -1,106 +1,390 @@
+
 const express = require("express");
 const path = require("path");
+const session = require("express-session");
+const bcrypt = require("bcryptjs");
 
-const usuarioController = require("./controller/usuarioController");
-const colegioController = require("./controller/colegioController");
-const horarioController = require("./controller/horarioController");
-const solicitudController = require("./controller/solicitudController");
-const visitaController = require("./controller/visitaController");
-const voluntarioController = require("./controller/voluntarioController");
+// ==========================================
+// IMPORTAR MODELO Y CONTROLADOR
+// ==========================================
+
+const datos = require("./datos");
+
+const EncargadoSEEA = require("./Modelo/EncargadoSEEA");
+
+const { router: api } = require("./controller/api");
+
+// ==========================================
+// CONFIGURACION DEL SERVIDOR
+// ==========================================
 
 const app = express();
-const PORT = 3000;
 
-// Recibir JSON
+const PORT = process.env.PORT || 3000;
+
+const VIEW_PATH = path.join(__dirname, "view");
+
+// ==========================================
+// MIDDLEWARE GENERAL
+// ==========================================
+
 app.use(express.json());
 
-// Archivos del frontend
-app.use(express.static(path.join(__dirname, "view")));
+app.use(express.urlencoded({
+    extended: true
+}));
 
-// Pagina principal
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "view", "BrowserView.html"));
+// ==========================================
+// CONFIGURACION DE SESIONES
+// ==========================================
+
+const SESSION_SECRET = process.env.SEEA_SESSION_SECRET;
+
+if (!SESSION_SECRET) {
+    throw new Error(
+        "Debes configurar SEEA_SESSION_SECRET"
+    );
+}
+
+app.use(session({
+    name: "seea.sid",
+
+    secret: SESSION_SECRET,
+
+    resave: false,
+
+    saveUninitialized: false,
+
+    cookie: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 1000 * 60 * 60 * 2
+    }
+}));
+
+// ==========================================
+// CREAR PRIMER ENCARGADO SEEA
+// ==========================================
+
+async function inicializarAdministrador() {
+
+    const correo = process.env.SEEA_ADMIN_EMAIL;
+    const contrasena = process.env.SEEA_ADMIN_PASSWORD;
+
+    if (!correo || !contrasena) {
+        throw new Error(
+            "Debes configurar SEEA_ADMIN_EMAIL y SEEA_ADMIN_PASSWORD"
+        );
+    }
+
+    if (contrasena.length < 8) {
+        throw new Error(
+            "La contraseña del administrador debe tener al menos 8 caracteres"
+        );
+    }
+
+    const existe = datos.usuarios.some(
+        usuario =>
+            usuario.correo.toLowerCase() ===
+            correo.trim().toLowerCase()
+    );
+
+    if (existe) {
+        return;
+    }
+
+    const hash = await bcrypt.hash(contrasena, 12);
+
+    const administrador = new EncargadoSEEA(
+        datos.generarId("usuario"),
+        "Administrador SEEA",
+        correo.trim().toLowerCase(),
+        hash,
+        "Administrador"
+    );
+
+    datos.usuarios.push(administrador);
+
+    console.log("Administrador SEEA inicializado");
+}
+
+// ==========================================
+// FUNCIONES DE AUTENTICACION
+// ==========================================
+
+function obtenerUsuario(req) {
+
+    const id = req.session?.usuarioId;
+
+    if (!id) {
+        return null;
+    }
+
+    return datos.usuarios.find(
+        usuario => usuario.id === id
+    ) || null;
+}
+
+// ==========================================
+// VERIFICAR SESION
+// ==========================================
+
+function requiereSesion(req, res, next) {
+
+    const usuario = obtenerUsuario(req);
+
+    if (!usuario) {
+        return res.redirect("/");
+    }
+
+    req.usuario = usuario;
+
+    next();
+}
+
+// ==========================================
+// VERIFICAR ROL
+// ==========================================
+
+function requiereRol(rolPermitido) {
+
+    return (req, res, next) => {
+
+        const usuario = obtenerUsuario(req);
+
+        if (!usuario) {
+            return res.redirect("/");
+        }
+
+        if (usuario.rol !== rolPermitido) {
+            return res.status(403).send(
+                "No tienes permiso para acceder a esta pagina"
+            );
+        }
+
+        req.usuario = usuario;
+
+        next();
+    };
+}
+
+// ==========================================
+// ARCHIVOS PUBLICOS
+// ==========================================
+
+// Estilos generales
+app.get("/style.css", (req, res) => {
+
+    res.sendFile(
+        path.join(VIEW_PATH, "style.css")
+    );
 });
 
-// USUARIOS
-app.post("/usuarios", usuarioController.registrarUsuario);
-app.get("/usuarios", usuarioController.obtenerUsuarios);
-app.get("/usuarios/:id", usuarioController.buscarUsuario);
-app.post("/login", usuarioController.iniciarSesion);
+// JavaScript del inicio de sesion
+app.get("/login.js", (req, res) => {
 
-// COLEGIOS
-app.post("/colegios", colegioController.registrarColegio);
-app.get("/colegios", colegioController.obtenerColegios);
-app.get("/colegios/:id", colegioController.buscarColegio);
-app.patch("/colegios/:id", colegioController.actualizarColegio);
-app.delete("/colegios/:id", colegioController.eliminarColegio);
+    res.sendFile(
+        path.join(VIEW_PATH, "login.js")
+    );
+});
 
-// HORARIOS
-app.post("/horarios", horarioController.crearHorario);
-app.get("/horarios", horarioController.obtenerHorarios);
-app.get("/horarios/disponibles", horarioController.obtenerDisponibles);
-app.get("/horarios/:id", horarioController.buscarHorario);
-app.delete("/horarios/:id", horarioController.eliminarHorario);
+// ==========================================
+// PAGINA PRINCIPAL
+// ==========================================
 
-// SOLICITUDES
-app.post("/solicitudes", solicitudController.crearSolicitud);
-app.get("/solicitudes", solicitudController.obtenerSolicitudes);
-app.patch("/solicitudes/:id/aprobar", solicitudController.aprobarSolicitud);
-app.patch("/solicitudes/:id/rechazar", solicitudController.rechazarSolicitud);
-app.patch("/solicitudes/:id/cancelar", solicitudController.cancelarSolicitud);
-app.delete("/solicitudes/:id", solicitudController.eliminarSolicitud);
+app.get("/", (req, res) => {
 
-// VISITAS
-app.post("/visitas", visitaController.crearVisita);
-app.get("/visitas", visitaController.obtenerVisitas);
-app.get("/visitas/:id", visitaController.buscarVisita);
-app.post("/visitas/:id/actividades", visitaController.agregarActividad);
-app.patch("/visitas/:id/iniciar", visitaController.iniciarVisita);
-app.patch("/visitas/:id/finalizar", visitaController.finalizarVisita);
+    const usuario = obtenerUsuario(req);
 
-// ACTIVIDADES
-app.post("/actividades", visitaController.crearActividad);
-app.get("/actividades", visitaController.obtenerActividades);
+    if (!usuario) {
+        return res.sendFile(
+            path.join(VIEW_PATH, "login.html")
+        );
+    }
 
-// VOLUNTARIOS
-app.post(
-    "/voluntarios/:id/disponibilidad",
-    voluntarioController.registrarDisponibilidad
+    const rutas = {
+        SEEA: "/encargado",
+        COLEGIO: "/colegio",
+        VOLUNTARIO: "/voluntario"
+    };
+
+    return res.redirect(
+        rutas[usuario.rol] || "/"
+    );
+});
+
+// ==========================================
+// RUTAS DE LA API
+// ==========================================
+
+app.use("/api", api);
+
+// ==========================================
+// JAVASCRIPT COMPARTIDO
+// ==========================================
+
+app.get(
+    "/comun.js",
+    requiereSesion,
+    (req, res) => {
+
+        res.sendFile(
+            path.join(VIEW_PATH, "comun.js")
+        );
+    }
+);
+
+// ==========================================
+// PORTAL ENCARGADO SEEA
+// ==========================================
+
+app.get(
+    "/encargado",
+    requiereRol("SEEA"),
+    (req, res) => {
+
+        res.sendFile(
+            path.join(VIEW_PATH, "encargado.html")
+        );
+    }
 );
 
 app.get(
-    "/voluntarios/:id/disponibilidad",
-    voluntarioController.obtenerDisponibilidades
+    "/encargado.js",
+    requiereRol("SEEA"),
+    (req, res) => {
+
+        res.sendFile(
+            path.join(VIEW_PATH, "encargado.js")
+        );
+    }
 );
 
-app.post("/asignaciones", voluntarioController.inscribirVoluntario);
-app.get("/asignaciones", voluntarioController.obtenerAsignaciones);
+// ==========================================
+// PORTAL COLEGIO
+// ==========================================
 
-app.patch(
-    "/asignaciones/:id/cancelar",
-    voluntarioController.cancelarAsignacion
+app.get(
+    "/colegio",
+    requiereRol("COLEGIO"),
+    (req, res) => {
+
+        res.sendFile(
+            path.join(VIEW_PATH, "colegio.html")
+        );
+    }
 );
 
-// Ruta inexistente
+app.get(
+    "/colegio.js",
+    requiereRol("COLEGIO"),
+    (req, res) => {
+
+        res.sendFile(
+            path.join(VIEW_PATH, "colegio.js")
+        );
+    }
+);
+
+// ==========================================
+// PORTAL VOLUNTARIO
+// ==========================================
+
+app.get(
+    "/voluntario",
+    requiereRol("VOLUNTARIO"),
+    (req, res) => {
+
+        res.sendFile(
+            path.join(VIEW_PATH, "voluntario.html")
+        );
+    }
+);
+
+app.get(
+    "/voluntario.js",
+    requiereRol("VOLUNTARIO"),
+    (req, res) => {
+
+        res.sendFile(
+            path.join(VIEW_PATH, "voluntario.js")
+        );
+    }
+);
+
+// ==========================================
+// RUTA NO ENCONTRADA
+// ==========================================
+
 app.use((req, res) => {
+
     res.status(404).json({
-        mensaje: "Ruta no encontrada"
+        mensaje: "La ruta solicitada no existe"
     });
 });
 
-// Manejo de errores
+// ==========================================
+// MANEJO GENERAL DE ERRORES
+// ==========================================
+
 app.use((error, req, res, next) => {
-    console.error(error);
+
+    console.error(
+        "Error en el servidor SEEA:",
+        error
+    );
 
     res.status(500).json({
         mensaje: "Error interno del servidor"
     });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
-    console.log("================================");
-    console.log("      SISTEMA SEEA");
-    console.log("================================");
-    console.log(`Servidor: http://localhost:${PORT}`);
-});
+// ==========================================
+// INICIAR SISTEMA
+// ==========================================
+
+async function iniciarSistema() {
+
+    try {
+
+        // Crear administrador inicial
+        await inicializarAdministrador();
+
+        // Iniciar servidor Express
+        app.listen(PORT, () => {
+
+            console.log("================================");
+            console.log("          SISTEMA SEEA");
+            console.log("================================");
+
+            console.log(
+                `Servidor: http://localhost:${PORT}`
+            );
+
+            console.log("");
+            console.log("Portales disponibles:");
+            console.log("- Encargado: /encargado");
+            console.log("- Colegio: /colegio");
+            console.log("- Voluntario: /voluntario");
+
+            console.log("");
+            console.log("Esperando peticiones...");
+        });
+
+    } catch (error) {
+
+        console.error(
+            "No se pudo iniciar SEEA:",
+            error.message
+        );
+
+        process.exitCode = 1;
+    }
+}
+
+// ==========================================
+// EJECUTAR
+// ==========================================
+
+iniciarSistema();

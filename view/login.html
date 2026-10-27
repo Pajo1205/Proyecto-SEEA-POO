@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- ==========================================
+         CONFIGURACION GENERAL
+    =========================================== -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Iniciar Sesión | SEEA - UVG</title>
+
+    <!-- ==========================================
+         ESTILOS DEL SISTEMA
+    =========================================== -->
+
+    <link
+        rel="stylesheet"
+        href="/style.css"
+    >
+
+</head>
+
+<body class="login-page">
+
+    <!-- ==========================================
+         CONTENEDOR PRINCIPAL
+    =========================================== -->
+
+    <main class="login-card">
+
+        <!-- ======================================
+             IDENTIDAD VISUAL UVG / SEEA
+        ======================================= -->
+
+        <header>
+
+            <div class="brand-mark">
+                UVG <span>SEEA</span>
+            </div>
+
+            <p class="eyebrow">
+                Sistema de Experiencias Educativas
+            </p>
+
+            <h1>
+                Bienvenido
+            </h1>
+
+            <p>
+                Iniciá sesión para acceder
+                a tu portal.
+            </p>
+
+        </header>
+
+        <!-- ======================================
+             FORMULARIO DE INICIO DE SESION
+        ======================================= -->
+
+        <form id="login-form">
+
+            <!-- CORREO ELECTRONICO -->
+
+            <label for="correo">
+
+                Correo electrónico
+
+                <input
+                    type="email"
+                    id="correo"
+                    name="correo"
+                    placeholder="ejemplo@correo.com"
+                    autocomplete="username"
+                    required
+                >
+
+            </label>
+
+            <!-- CONTRASEÑA -->
+
+            <label for="contrasena">
+
+                Contraseña
+
+                <input
+                    type="password"
+                    id="contrasena"
+                    name="contrasena"
+                    placeholder="Ingresá tu contraseña"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </label>
+
+            <!-- BOTON INGRESAR -->
+
+            <button
+                type="submit"
+                class="primary"
+            >
+                Ingresar
+            </button>
+
+        </form>
+
+        <!-- ======================================
+             MENSAJES DEL SISTEMA
+        ======================================= -->
+
+        <div
+            id="aviso"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+        <!-- ======================================
+             INFORMACION ADICIONAL
+        ======================================= -->
+
+        <footer>
+
+            <p class="small">
+                Las cuentas de colegios y voluntarios
+                son creadas por el personal autorizado
+                de SEEA.
+            </p>
+
+        </footer>
+
+    </main>
+
+    <!-- ==========================================
+         JAVASCRIPT DEL LOGIN
+    =========================================== -->
+
+    <script
+        src="/login.js"
+        defer
+    ></script>
+
+</body>
+
+</html>

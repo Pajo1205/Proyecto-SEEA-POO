@@ -1,49 +1,68 @@
 
 const Usuario = require("./Usuario");
+const Visita = require("./Visita");
+
+// ==========================================
+// CLASE ENCARGADO SEEA
+// ==========================================
 
 class EncargadoSEEA extends Usuario {
 
+    // ======================================
+    // CONSTRUCTOR
+    // ======================================
+
     constructor(id, nombre, correo, contrasena, puesto) {
 
-        // Constructor de Usuario
+        // Constructor de la clase padre
         super(id, nombre, correo, contrasena);
 
-        // Atributo propio de EncargadoSEEA
+        // Identificar el tipo de usuario
+        this.rol = "SEEA";
+
+        // Atributo propio del encargado
         this.puesto = puesto;
     }
 
-
-    // =========================
+    // ======================================
     // GETTERS
-    // =========================
+    // ======================================
 
     getPuesto() {
         return this.puesto;
     }
 
-
-    // =========================
-    // SETTERS
-    // =========================
-
-    setPuesto(puesto) {
-        this.puesto = puesto;
+    getRol() {
+        return this.rol;
     }
 
+    // ======================================
+    // SETTERS
+    // ======================================
 
-    // =========================
-    // GESTIÓN DE SOLICITUDES
-    // =========================
+    setPuesto(puesto) {
 
-    aprobarSolicitud(solicitud) {
+        if (!puesto || !puesto.trim()) {
+            return false;
+        }
+
+        this.puesto = puesto;
+
+        return true;
+    }
+
+    // ======================================
+    // GESTION DE SOLICITUDES
+    // ======================================
+
+    aprobarSolicitud(solicitud, horariosOcupados = []) {
 
         if (solicitud == null) {
             return false;
         }
 
-        return solicitud.aprobar();
+        return solicitud.aprobar(horariosOcupados);
     }
-
 
     rechazarSolicitud(solicitud) {
 
@@ -54,7 +73,6 @@ class EncargadoSEEA extends Usuario {
         return solicitud.rechazar();
     }
 
-
     cancelarSolicitud(solicitud) {
 
         if (solicitud == null) {
@@ -64,10 +82,9 @@ class EncargadoSEEA extends Usuario {
         return solicitud.cancelar();
     }
 
-
-    // =========================
-    // GESTIÓN DE HORARIOS
-    // =========================
+    // ======================================
+    // GESTION DE HORARIOS
+    // ======================================
 
     habilitarHorario(horario) {
 
@@ -78,7 +95,6 @@ class EncargadoSEEA extends Usuario {
         return horario.liberar();
     }
 
-
     bloquearHorario(horario) {
 
         if (horario == null) {
@@ -88,10 +104,9 @@ class EncargadoSEEA extends Usuario {
         return horario.reservar();
     }
 
-
-    // =========================
-    // GESTIÓN DE VISITAS
-    // =========================
+    // ======================================
+    // GESTION DE VISITAS
+    // ======================================
 
     crearVisita(idVisita, solicitud) {
 
@@ -99,7 +114,9 @@ class EncargadoSEEA extends Usuario {
             return null;
         }
 
-        const Visita = require("../Visita");
+        if (!solicitud.estaAprobada()) {
+            return null;
+        }
 
         return new Visita(
             idVisita,
@@ -107,10 +124,9 @@ class EncargadoSEEA extends Usuario {
         );
     }
 
-
-    // =========================
+    // ======================================
     // TO STRING
-    // =========================
+    // ======================================
 
     toString() {
 
@@ -118,8 +134,13 @@ class EncargadoSEEA extends Usuario {
 ID: ${this.id}
 Nombre: ${this.nombre}
 Correo: ${this.correo}
+Rol: ${this.rol}
 Puesto: ${this.puesto}`;
     }
 }
+
+// ==========================================
+// EXPORTAR CLASE
+// ==========================================
 
 module.exports = EncargadoSEEA;

@@ -1,3 +1,4 @@
+
 const bcrypt = require("bcryptjs");
 
 const UsuarioColegio = require("../Modelo/UsuarioColegio");
@@ -6,20 +7,89 @@ const Voluntario = require("../Modelo/Voluntario");
 
 const datos = require("../datos");
 
-// Mostrar usuario sin contraseña
+// ==========================================
+// FUNCIONES AUXILIARES
+// ==========================================
+
+// Convertir usuario a informacion publica
 function usuarioPublico(usuario) {
-    const {
-        contrasena,
-        ...informacion
-    } = usuario;
+
+    const informacion = {
+        id: usuario.getId(),
+        nombre: usuario.getNombre(),
+        correo: usuario.getCorreo(),
+        rol: usuario.rol
+    };
+
+    if (usuario.rol === "COLEGIO") {
+
+        informacion.telefono = usuario.getTelefono();
+
+        informacion.idColegio =
+            usuario.getColegio()?.getId() ?? null;
+    }
+
+    if (usuario.rol === "VOLUNTARIO") {
+
+        informacion.carnet = usuario.getCarnet();
+        informacion.carrera = usuario.getCarrera();
+    }
+
+    if (usuario.rol === "SEEA") {
+
+        informacion.puesto = usuario.getPuesto();
+    }
 
     return informacion;
 }
 
+// Buscar usuario por ID
+function buscarUsuarioPorId(id) {
+
+    return datos.usuarios.find(
+        usuario => usuario.getId() === Number(id)
+    );
+}
+
+// Buscar usuario por correo
+function buscarUsuarioPorCorreo(correo) {
+
+    if (typeof correo !== "string") {
+        return null;
+    }
+
+    return datos.usuarios.find(
+        usuario =>
+            usuario.getCorreo().toLowerCase() ===
+            correo.trim().toLowerCase()
+    );
+}
+
+// Validar correo electronico
+function correoValido(correo) {
+
+    return (
+        typeof correo === "string" &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
+    );
+}
+
+// Responder con error
+function responderError(res, codigo, mensaje) {
+
+    return res.status(codigo).json({
+        mensaje
+    });
+}
+
+// ==========================================
 // REGISTRAR USUARIO
+// ==========================================
 
 async function registrarUsuario(req, res) {
+
     try {
+
         const {
             nombre,
             correo,
@@ -30,125 +100,180 @@ async function registrarUsuario(req, res) {
             puesto,
             carnet,
             carrera
-        } = req.body;
+        } = req.body || {};
 
-        if (!nombre || !correo || !contrasena || !tipo) {
-            return res.status(400).json({
-                mensaje: "Faltan datos obligatorios"
-            });
+        // Validar campos obligatorios
+        if (
+            typeof nombre !== "string" ||
+            !nombre.trim() ||
+            !correoValido(correo) ||
+            typeof contrasena !== "string" ||
+            contrasena.length < 8
+        ) {
+            return responderError(
+                res,
+                400,
+                "Nombre, correo o contrasena invalidos"
+            );
         }
 
-        if (typeof contrasena !== "string" ||
-            contrasena.length < 8) {
-            return res.status(400).json({
-                mensaje: "La contraseña debe tener al menos 8 caracteres"
-            });
-        }
-
-        const existe = datos.usuarios.some(
-            usuario => usuario.getCorreo() === correo
-        );
+        // Verificar correo duplicado
+        const existe = buscarUsuarioPorCorreo(correo);
 
         if (existe) {
-            return res.status(409).json({
-                mensaje: "El correo ya está registrado"
-            });
+            return responderError(
+                res,
+                409,
+                "El correo ya esta registrado"
+            );
         }
 
-        const id = datos.generarId("usuario");
+        // Validar tipo de usuario
+        if (!["SEEA", "COLEGIO", "VOLUNTARIO"].includes(tipo)) {
 
+            return responderError(
+                res,
+                400,
+                "Tipo de usuario invalido"
+            );
+        }
+
+        // Buscar colegio si corresponde
+        let colegio = null;
+
+        if (tipo === "COLEGIO") {
+
+            colegio = datos.colegios.find(
+                c => c.getId() === Number(idColegio)
+            );
+
+            if (!colegio) {
+                return responderError(
+                    res,
+                    404,
+                    "Colegio no encontrado"
+                );
+            }
+        }
+
+        // Validar carnet del voluntario
+        if (
+            tipo === "VOLUNTARIO" &&
+            (
+                typeof carnet !== "string" ||
+                !carnet.trim()
+            )
+        ) {
+            return responderError(
+                res,
+                400,
+                "El carnet del voluntario es obligatorio"
+            );
+        }
+
+        // Cifrar contrasena
         const contrasenaHash = await bcrypt.hash(
-            contrasena, 12
+            contrasena,
+            12
         );
+
+        // Generar ID
+        const id = datos.generarId("usuario");
 
         let usuario;
 
+        // ==================================
+        // CREAR SEGUN ROL
+        // ==================================
+
         switch (tipo) {
 
-            case "COLEGIO": {
-                const colegio = datos.colegios.find(
-                    c => c.getId() === Number(idColegio)
-                );
-
-                if (!colegio) {
-                    return res.status(404).json({
-                        mensaje: "Colegio no encontrado"
-                    });
-                }
+            case "COLEGIO":
 
                 usuario = new UsuarioColegio(
-                    id, nombre, correo, contrasenaHash,
-                    telefono || "", colegio
+                    id,
+                    nombre.trim(),
+                    correo.trim().toLowerCase(),
+                    contrasenaHash,
+                    telefono || "",
+                    colegio
                 );
+
                 break;
-            }
 
             case "SEEA":
+
                 usuario = new EncargadoSEEA(
-                    id, nombre, correo, contrasenaHash,
-                    puesto || ""
+                    id,
+                    nombre.trim(),
+                    correo.trim().toLowerCase(),
+                    contrasenaHash,
+                    puesto || "Encargado"
                 );
+
                 break;
 
             case "VOLUNTARIO":
-                if (!carnet) {
-                    return res.status(400).json({
-                        mensaje: "El carnet es obligatorio"
-                    });
-                }
 
                 usuario = new Voluntario(
-                    id, nombre, correo, contrasenaHash,
-                    carnet, carrera || ""
+                    id,
+                    nombre.trim(),
+                    correo.trim().toLowerCase(),
+                    contrasenaHash,
+                    carnet.trim(),
+                    carrera || ""
                 );
-                break;
 
-            default:
-                return res.status(400).json({
-                    mensaje: "Tipo de usuario inválido"
-                });
+                break;
         }
 
+        // Guardar usuario
         datos.usuarios.push(usuario);
 
         return res.status(201).json({
-            mensaje: "Usuario registrado",
-            usuario: {
-                ...usuarioPublico(usuario),
-                tipo
-            }
+            mensaje: "Usuario registrado correctamente",
+            usuario: usuarioPublico(usuario)
         });
 
     } catch (error) {
-        return res.status(400).json({
-            mensaje: error.message
-        });
+
+        return responderError(
+            res,
+            400,
+            error.message
+        );
     }
 }
 
+// ==========================================
 // CONSULTAR USUARIOS
+// ==========================================
 
 function obtenerUsuarios(req, res) {
+
     const usuarios = datos.usuarios.map(
-        usuario => usuarioPublico(usuario)
+        usuarioPublico
     );
 
     return res.status(200).json(usuarios);
 }
 
+// ==========================================
 // BUSCAR USUARIO
+// ==========================================
 
 function buscarUsuario(req, res) {
-    const id = Number(req.params.id);
 
-    const usuario = datos.usuarios.find(
-        u => u.getId() === id
+    const usuario = buscarUsuarioPorId(
+        req.params.id
     );
 
     if (!usuario) {
-        return res.status(404).json({
-            mensaje: "Usuario no encontrado"
-        });
+        return responderError(
+            res,
+            404,
+            "Usuario no encontrado"
+        );
     }
 
     return res.status(200).json(
@@ -156,54 +281,103 @@ function buscarUsuario(req, res) {
     );
 }
 
-// INICIAR SESIÓN - COMPROBACIÓN DE CREDENCIALES
+// ==========================================
+// INICIAR SESION
+// ==========================================
 
-async function iniciarSesion(req, res) {
+async function iniciarSesion(req, res, next) {
+
     try {
-        const { correo, contrasena } = req.body;
 
-        if (!correo || !contrasena) {
-            return res.status(400).json({
-                mensaje: "Correo y contraseña obligatorios"
-            });
+        const {
+            correo,
+            contrasena
+        } = req.body || {};
+
+        if (
+            typeof correo !== "string" ||
+            typeof contrasena !== "string" ||
+            !correo.trim() ||
+            !contrasena
+        ) {
+            return responderError(
+                res,
+                400,
+                "Correo y contrasena obligatorios"
+            );
         }
 
-        const usuario = datos.usuarios.find(
-            u => u.getCorreo() === correo
-        );
+        // Buscar usuario
+        const usuario = buscarUsuarioPorCorreo(correo);
 
         if (!usuario) {
-            return res.status(401).json({
-                mensaje: "Credenciales incorrectas"
-            });
+            return responderError(
+                res,
+                401,
+                "Credenciales incorrectas"
+            );
         }
 
+        // Comparar contrasena con bcrypt
         const valida = await bcrypt.compare(
             contrasena,
             usuario.getContrasena()
         );
 
         if (!valida) {
-            return res.status(401).json({
-                mensaje: "Credenciales incorrectas"
-            });
+            return responderError(
+                res,
+                401,
+                "Credenciales incorrectas"
+            );
         }
 
-        return res.status(200).json({
-            mensaje: "Credenciales correctas",
-            usuario: usuarioPublico(usuario)
+        // Verificar que exista express-session
+        if (!req.session) {
+            return responderError(
+                res,
+                500,
+                "El servidor no tiene sesiones configuradas"
+            );
+        }
+
+        // Regenerar sesion por seguridad
+        req.session.regenerate(error => {
+
+            if (error) {
+                return next(error);
+            }
+
+            // Guardar ID del usuario
+            req.session.usuarioId = usuario.getId();
+
+            req.session.save(error => {
+
+                if (error) {
+                    return next(error);
+                }
+
+                return res.status(200).json({
+                    mensaje: "Sesion iniciada correctamente",
+                    usuario: usuarioPublico(usuario)
+                });
+            });
         });
 
     } catch (error) {
-        return res.status(500).json({
-            mensaje: "Error al verificar credenciales"
-        });
+
+        next(error);
     }
 }
+
+// ==========================================
+// EXPORTAR CONTROLADOR
+// ==========================================
 
 module.exports = {
     registrarUsuario,
     obtenerUsuarios,
     buscarUsuario,
-    iniciarSesion
+    iniciarSesion,
+    usuarioPublico
 };
