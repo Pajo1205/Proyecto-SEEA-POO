@@ -119,7 +119,7 @@ async function elegirTipo(tipo) {
         : "nombre@uvg.edu.gt";
 
     correo.pattern = esColegio
-        ? ""
+        ? "[^@\\s]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
         : "[^@\\s]+@uvg\\.edu\\.gt";
 
     try {
