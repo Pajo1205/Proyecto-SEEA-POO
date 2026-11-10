@@ -85,35 +85,32 @@
         return actividades.join(", ") || "Ninguna";
     }
 
-    // ==========================================
-    // CAMPOS DEL FORMULARIO DE COLEGIOS
-    // ==========================================
 
-    const camposColegio = [
-        {
-            nombre: "nombre",
-            etiqueta: "Nombre del colegio",
-            required: true
-        },
-        {
-            nombre: "direccion",
-            etiqueta: "Direccion"
-        },
-        {
-            nombre: "telefono",
-            etiqueta: "Telefono"
-        },
-        {
-            nombre: "correo",
-            etiqueta: "Correo",
-            tipo: "email"
-        },
-        {
-            nombre: "aliado",
-            etiqueta: "Colegio aliado",
-            tipo: "checkbox"
-        }
-    ];
+// ==========================================
+// CAMPOS DEL FORMULARIO DE COLEGIOS
+// ==========================================
+
+const camposColegio = [
+    {
+        nombre: "nombre",
+        etiqueta: "Nombre del colegio",
+        required: true
+    },
+    {
+        nombre: "direccion",
+        etiqueta: "Direccion",
+        required: true
+    },
+    {
+        nombre: "telefono",
+        etiqueta: "Telefono"
+    },
+    {
+        nombre: "correo",
+        etiqueta: "Correo",
+        tipo: "email"
+    }
+];
 
     // ==========================================
     // INICIO - PANEL ADMINISTRATIVO
@@ -236,153 +233,191 @@
         root.append(tarjeta);
     }
 
-    // ==========================================
-    // GESTION DE COLEGIOS
-    // ==========================================
+    
+// ==========================================
+// GESTION DE COLEGIOS
+// ==========================================
 
-    async function colegios(root) {
+async function colegios(root) {
 
-        root.append(
-            crearEncabezado(
-                "Gestion de colegios",
-                "Registro y administracion de instituciones educativas."
-            )
-        );
+    root.append(
+        crearEncabezado(
+            "Gestion de colegios",
+            "Registro y administracion de colegios aliados y no aliados."
+        )
+    );
 
-        // REGISTRAR COLEGIO
+    // ======================================
+    // REGISTRAR COLEGIO ALIADO
+    // ======================================
 
-        const registro = S.tarjeta("Registrar colegio");
+    const registro = S.tarjeta(
+        "Registrar colegio aliado"
+    );
 
-        registro.append(
-            S.formulario(
-                camposColegio,
+    registro.append(
+        S.formulario(
+            camposColegio,
 
-                async formulario => {
+            async formulario => {
 
-                    await S.post("/colegios", {
+                await S.post("/colegios", {
 
-                        nombre: S.val(formulario, "nombre"),
+                    nombre: S.val(
+                        formulario,
+                        "nombre"
+                    ),
 
-                        direccion: S.val(formulario, "direccion"),
+                    direccion: S.val(
+                        formulario,
+                        "direccion"
+                    ),
 
-                        telefono: S.val(formulario, "telefono"),
+                    telefono: S.val(
+                        formulario,
+                        "telefono"
+                    ),
 
-                        correo: S.val(formulario, "correo"),
+                    correo: S.val(
+                        formulario,
+                        "correo"
+                    )
+                });
 
-                        aliado: S.bool(formulario, "aliado")
-                    });
+                await recargar();
 
-                    await recargar();
+                S.aviso(
+                    "Colegio aliado registrado correctamente"
+                );
+            },
 
-                    S.aviso("Colegio registrado correctamente");
-                },
+            "Registrar colegio aliado"
+        )
+    );
 
-                "Registrar colegio"
-            )
-        );
+    root.append(registro);
 
-        root.append(registro);
+    // ======================================
+    // CONSULTAR COLEGIOS
+    // ======================================
 
-        // CONSULTAR COLEGIOS
+    const colegiosRegistrados =
+        await S.api("/colegios");
 
-        const colegiosRegistrados =
-            await S.api("/colegios");
+    const listado = S.tarjeta(
+        "Colegios registrados"
+    );
 
-        const listado = S.tarjeta(
-            "Colegios registrados"
-        );
+    const filas = colegiosRegistrados.map(colegio => {
 
-        const filas = colegiosRegistrados.map(colegio => {
+        // ==================================
+        // BOTONES DE ACCION
+        // ==================================
 
-            const acciones = crearBotones(
-                [
-                    "Editar",
-                    "secondary",
-                    () => editarColegio(colegio)
-                ],
-                [
-                    "Eliminar",
-                    "danger",
-                    () => {
+        const acciones = crearBotones(
+            [
+                "Editar",
+                "secondary",
+                () => editarColegio(colegio)
+            ],
+            [
+                "Eliminar",
+                "danger",
+                () => {
 
-                        if (!confirmar(
-                            `Â¿Eliminar ${colegio.nombre}?`
-                        )) {
-                            return;
-                        }
-
-                        ejecutarAccion(
-                            () => S.del(
-                                `/colegios/${colegio.id}`
-                            ),
-                            "Colegio eliminado"
-                        );
+                    if (!confirmar(
+                        `¿Eliminar ${colegio.nombre}?`
+                    )) {
+                        return;
                     }
-                ]
-            );
 
-            return [
-                colegio.nombre,
-                `${colegio.correo || "-"} Â· ${colegio.telefono || "-"}`,
-                colegio.aliado ? "Aliado" : "No aliado",
-                acciones
-            ];
-        });
-
-        listado.append(
-            S.tabla(
-                [
-                    "Colegio",
-                    "Contacto",
-                    "Tipo",
-                    "Acciones"
-                ],
-                filas
-            )
-        );
-
-        root.append(listado);
-    }
-
-    // ==========================================
-    // EDITAR COLEGIO
-    // ==========================================
-
-    async function editarColegio(colegio) {
-
-        const nombre = prompt(
-            "Nombre del colegio:",
-            colegio.nombre
-        );
-
-        if (nombre === null) {
-            return;
-        }
-
-        if (!nombre.trim()) {
-            S.aviso(
-                "El nombre del colegio no puede estar vacio",
-                true
-            );
-
-            return;
-        }
-
-        const aliado = confirmar(
-            "Â¿Es colegio aliado?\nAceptar = Si / Cancelar = No"
-        );
-
-        await ejecutarAccion(
-            () => S.patch(
-                `/colegios/${colegio.id}`,
-                {
-                    nombre: nombre.trim(),
-                    aliado
+                    ejecutarAccion(
+                        () => S.del(
+                            `/colegios/${colegio.id}`
+                        ),
+                        "Colegio eliminado"
+                    );
                 }
-            ),
-            "Colegio actualizado"
+            ]
         );
+
+        // ==================================
+        // DATOS DE LA TABLA
+        // ==================================
+
+        return [
+            colegio.nombre,
+
+            `${colegio.correo || "-"} · ${colegio.telefono || "-"}`,
+
+            colegio.aliado
+                ? "Aliado"
+                : "No aliado",
+
+            acciones
+        ];
+    });
+
+    // ======================================
+    // MOSTRAR TABLA
+    // ======================================
+
+    listado.append(
+        S.tabla(
+            [
+                "Colegio",
+                "Contacto",
+                "Tipo",
+                "Acciones"
+            ],
+            filas
+        )
+    );
+
+    root.append(listado);
+}
+
+// ==========================================
+// EDITAR COLEGIO
+// ==========================================
+
+async function editarColegio(colegio) {
+
+    const nombre = prompt(
+        "Nombre del colegio:",
+        colegio.nombre
+    );
+
+    if (nombre === null) {
+        return;
     }
+
+    if (!nombre.trim()) {
+
+        S.aviso(
+            "El nombre del colegio no puede estar vacio",
+            true
+        );
+
+        return;
+    }
+
+    // ======================================
+    // ACTUALIZAR NOMBRE
+    // ======================================
+
+    await ejecutarAccion(
+        () => S.patch(
+            `/colegios/${colegio.id}`,
+            {
+                nombre: nombre.trim()
+            }
+        ),
+
+        "Colegio actualizado correctamente"
+    );
+}
+
 
     // ==========================================
     // GESTION DE HORARIOS

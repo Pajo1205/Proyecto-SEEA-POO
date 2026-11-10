@@ -1,33 +1,32 @@
 
 const formulario = document.getElementById("registro-form");
-
 const aviso = document.getElementById("aviso");
 
 const selectorColegio = document.getElementById("idColegio");
-
 const selectorCarrera = document.getElementById("carrera");
+
+const camposOtroColegio = document.getElementById(
+    "campos-otro-colegio"
+);
 
 let colegios = [];
 
 // ==========================================
-// MOSTRAR MENSAJES
+// MENSAJES
 // ==========================================
 
 function mensaje(texto, fallo = false) {
-
     aviso.textContent = texto;
-
     aviso.className = texto
         ? "notice" + (fallo ? " error" : "")
         : "";
 }
 
 // ==========================================
-// CONSULTAR DATOS
+// CONSULTAR API
 // ==========================================
 
 async function obtener(ruta) {
-
     const respuesta = await fetch(ruta, {
         credentials: "same-origin"
     });
@@ -44,13 +43,29 @@ async function obtener(ruta) {
 }
 
 // ==========================================
+// MOSTRAR OTRO COLEGIO
+// ==========================================
+
+function actualizarOtroColegio() {
+    const otro = selectorColegio.value === "OTRO";
+
+    camposOtroColegio.hidden = !otro;
+
+    formulario.elements.nombreColegio.required = otro;
+    formulario.elements.direccionColegio.required = otro;
+
+    if (!otro) {
+        formulario.elements.nombreColegio.value = "";
+        formulario.elements.direccionColegio.value = "";
+    }
+}
+
+// ==========================================
 // ELEGIR TIPO DE USUARIO
 // ==========================================
 
 async function elegirTipo(tipo) {
-
     formulario.reset();
-
     mensaje("");
 
     formulario.elements.tipo.value = tipo;
@@ -63,50 +78,52 @@ async function elegirTipo(tipo) {
         "seccion-formulario"
     ).hidden = false;
 
-    const colegio = tipo === "COLEGIO";
+    const esColegio = tipo === "COLEGIO";
 
     document.getElementById(
         "campos-colegio"
-    ).hidden = !colegio;
+    ).hidden = !esColegio;
 
     document.getElementById(
         "campos-voluntario"
-    ).hidden = colegio;
+    ).hidden = esColegio;
 
     document.getElementById(
         "campo-otra-carrera"
     ).hidden = true;
 
-    formulario.elements.telefono.required = colegio;
-    selectorColegio.required = colegio;
+    camposOtroColegio.hidden = true;
 
-    formulario.elements.carnet.required = !colegio;
-    selectorCarrera.required = !colegio;
+    formulario.elements.telefono.required = esColegio;
+    selectorColegio.required = esColegio;
 
+    formulario.elements.carnet.required = !esColegio;
+    selectorCarrera.required = !esColegio;
+
+    formulario.elements.nombreColegio.required = false;
+    formulario.elements.direccionColegio.required = false;
     formulario.elements.otraCarrera.required = false;
 
     document.getElementById(
         "titulo-registro"
-    ).textContent = colegio
-        ? "Usuario de colegio"
-        : "Voluntario UVG";
+    ).textContent = esColegio
+        ? "Registro de usuario de colegio"
+        : "Registro de voluntario UVG";
 
     const correo = document.getElementById(
         "correo-registro"
     );
 
-    correo.placeholder = colegio
+    correo.placeholder = esColegio
         ? "correo@colegio.edu.gt"
         : "nombre@uvg.edu.gt";
 
-    correo.pattern = colegio
+    correo.pattern = esColegio
         ? ""
         : "[^@\\s]+@uvg\\.edu\\.gt";
 
     try {
-
-        if (colegio) {
-
+        if (esColegio) {
             colegios = await obtener(
                 "/api/registro/colegios"
             );
@@ -115,22 +132,23 @@ async function elegirTipo(tipo) {
                 new Option("Seleccionar colegio", "")
             );
 
-            colegios.forEach(c => {
-
+            colegios.forEach(colegio => {
                 selectorColegio.add(
-                    new Option(c.nombre, c.id)
+                    new Option(
+                        colegio.nombre,
+                        String(colegio.id)
+                    )
                 );
             });
 
-            if (!colegios.length) {
-                mensaje(
-                    "SEEA todavía no ha registrado colegios.",
-                    true
-                );
-            }
+            selectorColegio.add(
+                new Option(
+                    "Otro colegio (no aparece en la lista)",
+                    "OTRO"
+                )
+            );
 
         } else {
-
             const carreras = await obtener(
                 "/api/registro/carreras"
             );
@@ -139,17 +157,14 @@ async function elegirTipo(tipo) {
                 new Option("Seleccionar carrera", "")
             );
 
-            carreras.forEach(c => {
-
+            carreras.forEach(carrera => {
                 selectorCarrera.add(
-                    new Option(c, c)
+                    new Option(carrera, carrera)
                 );
             });
         }
-
-    } catch (err) {
-
-        mensaje(err.message, true);
+    } catch (error) {
+        mensaje(error.message, true);
     }
 }
 
@@ -159,9 +174,7 @@ async function elegirTipo(tipo) {
 
 document.querySelectorAll("[data-tipo]").forEach(
     boton => {
-
         boton.addEventListener("click", () => {
-
             elegirTipo(boton.dataset.tipo);
         });
     }
@@ -174,7 +187,6 @@ document.querySelectorAll("[data-tipo]").forEach(
 document.getElementById(
     "volver-tipo"
 ).addEventListener("click", () => {
-
     document.getElementById(
         "seccion-formulario"
     ).hidden = true;
@@ -187,10 +199,11 @@ document.getElementById(
 });
 
 // ==========================================
-// MOSTRAR DIRECCION DEL COLEGIO
+// SELECCION DE COLEGIO
 // ==========================================
 
 selectorColegio.addEventListener("change", () => {
+    actualizarOtroColegio();
 
     const colegio = colegios.find(
         c => c.id === Number(selectorColegio.value)
@@ -204,11 +217,10 @@ selectorColegio.addEventListener("change", () => {
 });
 
 // ==========================================
-// OPCION OTRA CARRERA
+// OTRA CARRERA
 // ==========================================
 
 selectorCarrera.addEventListener("change", () => {
-
     const otra = selectorCarrera.value === "Otro";
 
     document.getElementById(
@@ -223,19 +235,17 @@ selectorCarrera.addEventListener("change", () => {
 });
 
 // ==========================================
-// REGISTRAR USUARIO
+// ENVIAR REGISTRO
 // ==========================================
 
 formulario.addEventListener("submit", async evento => {
-
     evento.preventDefault();
+
+    mensaje("");
 
     const f = formulario.elements;
 
-    if (
-        f.contrasena.value !==
-        f.confirmarContrasena.value
-    ) {
+    if (f.contrasena.value !== f.confirmarContrasena.value) {
         return mensaje(
             "Las contraseñas no coinciden",
             true
@@ -253,19 +263,22 @@ formulario.addEventListener("submit", async evento => {
     };
 
     if (tipo === "COLEGIO") {
-
         body.telefono = f.telefono.value.trim();
 
-        body.idColegio = Number(
-            f.idColegio.value
-        );
+        if (selectorColegio.value === "OTRO") {
+            body.idColegio = "OTRO";
+            body.nombreColegio =
+                f.nombreColegio.value.trim();
+            body.direccionColegio =
+                f.direccionColegio.value.trim();
+        } else {
+            body.idColegio = selectorColegio.value;
+        }
+    }
 
-    } else {
-
+    if (tipo === "VOLUNTARIO") {
         body.carnet = f.carnet.value.trim();
-
         body.carrera = f.carrera.value;
-
         body.otraCarrera = f.otraCarrera.value.trim();
     }
 
@@ -276,32 +289,29 @@ formulario.addEventListener("submit", async evento => {
     boton.disabled = true;
 
     try {
-
         const respuesta = await fetch(
             "/api/registro",
             {
                 method: "POST",
-
                 credentials: "same-origin",
-
                 headers: {
                     "Content-Type": "application/json"
                 },
-
                 body: JSON.stringify(body)
             }
         );
 
-        const datos = await respuesta.json();
+        const resultado = await respuesta.json();
 
         if (!respuesta.ok) {
             throw new Error(
-                datos.mensaje || "No se pudo registrar"
+                resultado.mensaje ||
+                "No se pudo registrar la cuenta"
             );
         }
 
         mensaje(
-            "Cuenta creada. Ya podés iniciar sesión."
+            "Cuenta creada correctamente. Ya podés iniciar sesión."
         );
 
         formulario.reset();
@@ -310,12 +320,10 @@ formulario.addEventListener("submit", async evento => {
             location.assign("/");
         }, 1200);
 
-    } catch (err) {
-
-        mensaje(err.message, true);
+    } catch (error) {
+        mensaje(error.message, true);
 
     } finally {
-
         boton.disabled = false;
     }
 });

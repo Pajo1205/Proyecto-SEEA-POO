@@ -245,7 +245,7 @@ app.get("/registro", (req, res) => {
 
 app.use(
     "/api/registro",
-    registroController.router
+    registroController
 );
 
 // ==========================================

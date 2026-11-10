@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const datos = require("../datos");
 
+const Colegio = require("../Modelo/Colegio");
 const UsuarioColegio = require("../Modelo/UsuarioColegio");
 const Voluntario = require("../Modelo/Voluntario");
 const Carrera = require("../Modelo/Carrera");
@@ -28,12 +29,26 @@ function textoValido(valor) {
 function correoValido(correo) {
     return (
         typeof correo === "string" &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())
+    );
+}
+
+function normalizarNombre(nombre) {
+    return nombre
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLocaleLowerCase("es");
+}
+
+function buscarColegioPorNombre(nombre) {
+    return datos.colegios.find(
+        colegio =>
+            normalizarNombre(colegio.getNombre()) ===
+            normalizarNombre(nombre)
     );
 }
 
 function usuarioPublico(usuario) {
-
     const resultado = {
         id: usuario.getId(),
         nombre: usuario.getNombre(),
@@ -44,6 +59,8 @@ function usuarioPublico(usuario) {
     if (usuario.rol === "COLEGIO") {
         resultado.telefono = usuario.getTelefono();
         resultado.idColegio = usuario.getColegio().getId();
+        resultado.colegio = usuario.getColegio().getNombre();
+        resultado.aliado = usuario.getColegio().esAliado();
     }
 
     if (usuario.rol === "VOLUNTARIO") {
@@ -55,29 +72,29 @@ function usuarioPublico(usuario) {
 }
 
 // ==========================================
-// OBTENER COLEGIOS REGISTRADOS
+// CONSULTAR COLEGIOS ALIADOS
 // ==========================================
 
 router.get("/colegios", (req, res) => {
-
-    const colegios = datos.colegios.map(colegio => ({
-        id: colegio.getId(),
-        nombre: colegio.getNombre(),
-        direccion: colegio.getDireccion()
-    }));
+    const colegios = datos.colegios
+        .filter(colegio => colegio.esAliado())
+        .map(colegio => ({
+            id: colegio.getId(),
+            nombre: colegio.getNombre(),
+            direccion: colegio.getDireccion()
+        }));
 
     return res.status(200).json(colegios);
 });
 
 // ==========================================
-// OBTENER CARRERAS UNIVERSITARIAS
+// CONSULTAR CARRERAS
 // ==========================================
 
 router.get("/carreras", (req, res) => {
-
-    const carreras = Object.values(Carrera);
-
-    return res.status(200).json(carreras);
+    return res.status(200).json(
+        Object.values(Carrera)
+    );
 });
 
 // ==========================================
@@ -85,9 +102,7 @@ router.get("/carreras", (req, res) => {
 // ==========================================
 
 router.post("/", async (req, res, next) => {
-
     try {
-
         const {
             tipo,
             nombre,
@@ -96,21 +111,22 @@ router.post("/", async (req, res, next) => {
             confirmarContrasena,
             telefono,
             idColegio,
+            nombreColegio,
+            direccionColegio,
             carnet,
             carrera,
             otraCarrera
         } = req.body || {};
 
         // ==================================
-        // VALIDAR TIPO DE USUARIO
+        // VALIDAR ROL
         // ==================================
 
         if (!["COLEGIO", "VOLUNTARIO"].includes(tipo)) {
-
             return responderError(
                 res,
                 403,
-                "Solo pueden registrarse colegios y voluntarios"
+                "Solo pueden registrarse usuarios de colegio y voluntarios"
             );
         }
 
@@ -118,21 +134,22 @@ router.post("/", async (req, res, next) => {
         // VALIDAR DATOS GENERALES
         // ==================================
 
-        if (!textoValido(nombre)) {
-
+        if (
+            !textoValido(nombre) ||
+            nombre.trim().length > 120
+        ) {
             return responderError(
                 res,
                 400,
-                "El nombre es obligatorio"
+                "El nombre es obligatorio y debe tener máximo 120 caracteres"
             );
         }
 
         if (!correoValido(correo)) {
-
             return responderError(
                 res,
                 400,
-                "El correo electronico no es valido"
+                "El correo electrónico no es válido"
             );
         }
 
@@ -140,87 +157,134 @@ router.post("/", async (req, res, next) => {
             typeof contrasena !== "string" ||
             contrasena.length < 8
         ) {
-
             return responderError(
                 res,
                 400,
-                "La contrasena debe tener al menos 8 caracteres"
+                "La contraseña debe tener al menos 8 caracteres"
             );
         }
 
         if (contrasena !== confirmarContrasena) {
-
             return responderError(
                 res,
                 400,
-                "Las contrasenas no coinciden"
+                "Las contraseñas no coinciden"
             );
         }
 
-        const correoNormalizado =
-            correo.trim().toLowerCase();
+        const email = correo.trim().toLowerCase();
 
-        // ==================================
-        // COMPROBAR CORREO DUPLICADO
-        // ==================================
-
-        const correoExistente = datos.usuarios.some(
+        const existe = datos.usuarios.some(
             usuario =>
-                usuario.getCorreo().toLowerCase() ===
-                correoNormalizado
+                usuario.getCorreo().toLowerCase() === email
         );
 
-        if (correoExistente) {
-
+        if (existe) {
             return responderError(
                 res,
                 409,
-                "El correo ya esta registrado"
+                "El correo ya está registrado"
             );
         }
 
         let colegio = null;
+        let crearColegioNuevo = false;
         let carreraFinal = null;
 
         // ==================================
-        // VALIDACIONES DE COLEGIO
+        // REGISTRO DE COLEGIO
         // ==================================
 
         if (tipo === "COLEGIO") {
 
-            colegio = datos.colegios.find(
-                c => c.getId() === Number(idColegio)
-            );
-
-            if (!colegio) {
-
-                return responderError(
-                    res,
-                    404,
-                    "Debes seleccionar un colegio registrado"
-                );
-            }
-
-            if (!textoValido(telefono)) {
-
+            if (
+                !textoValido(telefono) ||
+                telefono.trim().length > 30
+            ) {
                 return responderError(
                     res,
                     400,
-                    "El telefono es obligatorio"
+                    "El teléfono es obligatorio"
                 );
+            }
+
+            // Caso 1: Colegio no registrado
+            if (idColegio === "OTRO") {
+
+                if (
+                    !textoValido(nombreColegio) ||
+                    nombreColegio.trim().length > 150
+                ) {
+                    return responderError(
+                        res,
+                        400,
+                        "Escribí un nombre válido para el colegio"
+                    );
+                }
+
+                if (
+                    !textoValido(direccionColegio) ||
+                    direccionColegio.trim().length > 250
+                ) {
+                    return responderError(
+                        res,
+                        400,
+                        "La dirección del colegio es obligatoria"
+                    );
+                }
+
+                // Evitar colegios duplicados
+                const duplicado = buscarColegioPorNombre(
+                    nombreColegio
+                );
+
+                if (duplicado) {
+                    return responderError(
+                        res,
+                        409,
+                        "Este colegio ya está registrado. Contactá a SEEA si no aparece en la lista."
+                    );
+                }
+
+                crearColegioNuevo = true;
+
+            } else {
+
+                // Caso 2: Colegio aliado existente
+                const id = Number(idColegio);
+
+                if (
+                    !Number.isSafeInteger(id) ||
+                    id <= 0
+                ) {
+                    return responderError(
+                        res,
+                        400,
+                        "Seleccioná un colegio válido"
+                    );
+                }
+
+                colegio = datos.colegios.find(
+                    c => c.getId() === id && c.esAliado()
+                );
+
+                if (!colegio) {
+                    return responderError(
+                        res,
+                        404,
+                        "Colegio aliado no encontrado"
+                    );
+                }
             }
         }
 
         // ==================================
-        // VALIDACIONES DE VOLUNTARIO
+        // REGISTRO DE VOLUNTARIO
         // ==================================
 
         if (tipo === "VOLUNTARIO") {
 
-            if (!Voluntario.correoInstitucionalValido(
-                correoNormalizado
-            )) {
-
+            if (!Voluntario.correoInstitucionalValido(email)) {
                 return responderError(
                     res,
                     400,
@@ -228,8 +292,10 @@ router.post("/", async (req, res, next) => {
                 );
             }
 
-            if (!textoValido(carnet)) {
-
+            if (
+                !textoValido(carnet) ||
+                carnet.trim().length > 30
+            ) {
                 return responderError(
                     res,
                     400,
@@ -237,44 +303,70 @@ router.post("/", async (req, res, next) => {
                 );
             }
 
-            const carrerasValidas = Object.values(Carrera);
+            const carnetDuplicado = datos.usuarios.some(
+                usuario =>
+                    usuario.rol === "VOLUNTARIO" &&
+                    usuario.getCarnet() === carnet.trim()
+            );
 
-            if (!carrerasValidas.includes(carrera)) {
+            if (carnetDuplicado) {
+                return responderError(
+                    res,
+                    409,
+                    "Este carnet ya está registrado"
+                );
+            }
 
+            if (!Object.values(Carrera).includes(carrera)) {
                 return responderError(
                     res,
                     400,
-                    "Selecciona una carrera valida"
+                    "Seleccioná una carrera válida"
                 );
             }
 
             if (carrera === Carrera.OTRO) {
 
-                if (!textoValido(otraCarrera)) {
-
+                if (
+                    !textoValido(otraCarrera) ||
+                    otraCarrera.trim().length > 120
+                ) {
                     return responderError(
                         res,
                         400,
-                        "Debes escribir el nombre de tu carrera"
+                        "Escribí el nombre de tu carrera"
                     );
                 }
 
                 carreraFinal = otraCarrera.trim();
 
             } else {
-
                 carreraFinal = carrera;
             }
         }
 
         // ==================================
-        // GENERAR HASH DE CONTRASENA
+        // PROTEGER CONTRASEÑA
         // ==================================
 
-        const hash = await bcrypt.hash(
-            contrasena,
-            12
-        );
+        const hash = await bcrypt.hash(contrasena, 12);
+
+        // ==================================
+        // CREAR COLEGIO NO ALIADO
+        // ==================================
+
+        if (crearColegioNuevo) {
+            colegio = new Colegio(
+                datos.generarId("colegio"),
+                nombreColegio.trim(),
+                direccionColegio.trim(),
+                telefono.trim(),
+                email,
+                false
+            );
+
+            datos.colegios.push(colegio);
+        }
 
         // ==================================
         // CREAR USUARIO
@@ -289,18 +381,20 @@ router.post("/", async (req, res, next) => {
             usuario = new UsuarioColegio(
                 id,
                 nombre.trim(),
-                correoNormalizado,
+                email,
                 hash,
                 telefono.trim(),
                 colegio
             );
+
+            usuario.rol = "COLEGIO";
 
         } else {
 
             usuario = new Voluntario(
                 id,
                 nombre.trim(),
-                correoNormalizado,
+                email,
                 hash,
                 carnet.trim(),
                 carreraFinal
@@ -313,25 +407,14 @@ router.post("/", async (req, res, next) => {
 
         datos.usuarios.push(usuario);
 
-        // ==================================
-        // RESPUESTA
-        // ==================================
-
         return res.status(201).json({
             mensaje: "Cuenta registrada correctamente",
             usuario: usuarioPublico(usuario)
         });
 
     } catch (error) {
-
         next(error);
     }
 });
 
-// ==========================================
-// EXPORTAR ROUTER
-// ==========================================
-
-module.exports = {
-    router
-};
+module.exports = router;

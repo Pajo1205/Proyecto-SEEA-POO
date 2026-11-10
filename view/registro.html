@@ -7,10 +7,10 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1"
+        content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Registro | SEEA UVG</title>
+    <title>Crear cuenta | SEEA UVG</title>
 
     <link rel="stylesheet" href="/style.css">
 </head>
@@ -19,54 +19,79 @@
 
     <main class="login-card registro-card">
 
-        <div class="brand-mark">
-            UVG <span>SEEA</span>
-        </div>
+        <!-- LOGOTIPO -->
 
-        <p class="eyebrow">
-            Sistema de Experiencias Educativas
-        </p>
+        <header class="registro-header">
 
-        <h1>Crear cuenta</h1>
+            <div class="brand-mark">
+                UVG <span>SEEA</span>
+            </div>
 
-        <!-- SELECCION DE USUARIO -->
+            <p class="eyebrow">
+                Sistema de Experiencias Educativas
+            </p>
+
+            <h1>Crear nueva cuenta</h1>
+
+            <p>
+                Registrate para participar en
+                las experiencias educativas de UVG.
+            </p>
+
+        </header>
+
+        <!-- SELECCIONAR TIPO DE USUARIO -->
 
         <section id="seleccion-tipo">
 
-            <p>¿Qué tipo de usuario deseas crear?</p>
+            <h2>¿Qué tipo de usuario sos?</h2>
 
             <div class="registro-opciones">
 
                 <button
-                    class="registro-opcion"
                     type="button"
+                    class="registro-opcion"
                     data-tipo="COLEGIO"
                 >
-                    Usuario de colegio
+                    <span class="registro-icono">🏫</span>
+
+                    <strong>Usuario de colegio</strong>
+
+                    <small>
+                        Solicitá visitas educativas
+                        para tu institución.
+                    </small>
                 </button>
 
                 <button
-                    class="registro-opcion"
                     type="button"
+                    class="registro-opcion"
                     data-tipo="VOLUNTARIO"
                 >
-                    Voluntario UVG
+                    <span class="registro-icono">🎓</span>
+
+                    <strong>Voluntario UVG</strong>
+
+                    <small>
+                        Registrá tu disponibilidad
+                        y participá en visitas.
+                    </small>
                 </button>
 
             </div>
 
         </section>
 
-        <!-- FORMULARIO -->
+        <!-- FORMULARIO DE REGISTRO -->
 
         <section id="seccion-formulario" hidden>
 
             <button
-                class="secondary"
                 type="button"
                 id="volver-tipo"
+                class="secondary"
             >
-                Cambiar tipo
+                ← Cambiar tipo de usuario
             </button>
 
             <h2 id="titulo-registro"></h2>
@@ -78,13 +103,17 @@
                     name="tipo"
                 >
 
+                <!-- DATOS GENERALES -->
+
                 <label>
                     Nombre completo
 
                     <input
+                        type="text"
                         name="nombre"
-                        required
                         maxlength="120"
+                        autocomplete="name"
+                        required
                     >
                 </label>
 
@@ -92,14 +121,15 @@
                     Correo electrónico
 
                     <input
-                        name="correo"
                         type="email"
+                        name="correo"
                         id="correo-registro"
+                        autocomplete="email"
                         required
                     >
                 </label>
 
-                <!-- USUARIO COLEGIO -->
+                <!-- USUARIO DE COLEGIO -->
 
                 <div id="campos-colegio" hidden>
 
@@ -107,24 +137,62 @@
                         Teléfono
 
                         <input
-                            name="telefono"
                             type="tel"
+                            name="telefono"
+                            maxlength="30"
                         >
                     </label>
 
                     <label>
-                        Colegio registrado
+                        Colegio al que pertenecés
 
                         <select
                             name="idColegio"
                             id="idColegio"
-                        ></select>
+                        >
+                            <option value="">
+                                Seleccionar colegio
+                            </option>
+                        </select>
                     </label>
 
                     <p
-                        class="hint"
                         id="direccion-colegio"
+                        class="hint"
                     ></p>
+
+                    <!-- OTRO COLEGIO -->
+
+                    <div id="campos-otro-colegio" hidden>
+
+                        <p class="hint">
+                            Si tu colegio no aparece,
+                            ingresá sus datos.
+                            Se registrará como
+                            colegio no aliado.
+                        </p>
+
+                        <label>
+                            Nombre del colegio
+
+                            <input
+                                type="text"
+                                name="nombreColegio"
+                                maxlength="150"
+                            >
+                        </label>
+
+                        <label>
+                            Dirección del colegio
+
+                            <input
+                                type="text"
+                                name="direccionColegio"
+                                maxlength="250"
+                            >
+                        </label>
+
+                    </div>
 
                 </div>
 
@@ -133,26 +201,35 @@
                 <div id="campos-voluntario" hidden>
 
                     <label>
-                        Carnet
+                        Carnet universitario
 
-                        <input name="carnet">
+                        <input
+                            type="text"
+                            name="carnet"
+                            maxlength="30"
+                        >
                     </label>
 
                     <label>
-                        Carrera
+                        Carrera universitaria
 
                         <select
                             name="carrera"
                             id="carrera"
-                        ></select>
+                        >
+                            <option value="">
+                                Seleccionar carrera
+                            </option>
+                        </select>
                     </label>
 
                     <div id="campo-otra-carrera" hidden>
 
                         <label>
-                            Escribí tu carrera
+                            Especificá tu carrera
 
                             <input
+                                type="text"
                                 name="otraCarrera"
                                 maxlength="120"
                             >
@@ -168,8 +245,8 @@
                     Contraseña
 
                     <input
-                        name="contrasena"
                         type="password"
+                        name="contrasena"
                         minlength="8"
                         autocomplete="new-password"
                         required
@@ -180,8 +257,8 @@
                     Confirmar contraseña
 
                     <input
-                        name="confirmarContrasena"
                         type="password"
+                        name="confirmarContrasena"
                         minlength="8"
                         autocomplete="new-password"
                         required
@@ -199,16 +276,24 @@
 
         </section>
 
-        <p
+        <!-- MENSAJES -->
+
+        <div
             id="aviso"
             role="status"
             aria-live="polite"
-        ></p>
+        ></div>
 
-        <p class="registro-footer">
-            ¿Ya tenés cuenta?
-            <a href="/">Iniciar sesión</a>
-        </p>
+        <!-- INICIO DE SESION -->
+
+        <footer class="registro-footer">
+
+            <p>
+                ¿Ya tenés una cuenta?
+                <a href="/">Iniciar sesión</a>
+            </p>
+
+        </footer>
 
     </main>
 

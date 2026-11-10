@@ -368,117 +368,251 @@ router.get(
     }
 );
 
-// Registrar colegio
+
+// ==========================================
+// REGISTRAR COLEGIO ALIADO
+// ==========================================
+
 router.post(
     "/colegios",
     requiereRol("SEEA"),
     (req, res) => {
-        const {
-            nombre,
-            direccion = "",
-            telefono = "",
-            correo = "",
-            aliado = false
-        } = req.body || {};
 
-        if (!textoValido(nombre) ||
-            typeof aliado !== "boolean") {
+        try {
+
+            const {
+                nombre,
+                direccion = "",
+                telefono = "",
+                correo = ""
+            } = req.body || {};
+
+            // ==================================
+            // VALIDAR NOMBRE
+            // ==================================
+
+            if (!textoValido(nombre)) {
+                return error(
+                    res,
+                    400,
+                    "El nombre del colegio es obligatorio"
+                );
+            }
+
+            // ==================================
+            // VALIDAR CAMPOS
+            // ==================================
+
+            if (
+                typeof direccion !== "string" ||
+                typeof telefono !== "string" ||
+                typeof correo !== "string"
+            ) {
+                return error(
+                    res,
+                    400,
+                    "Los datos del colegio no son validos"
+                );
+            }
+
+            // ==================================
+            // COMPROBAR DUPLICADOS
+            // ==================================
+
+            const duplicado = datos.colegios.some(
+                colegio =>
+                    colegio.getNombre().trim().toLowerCase() ===
+                    nombre.trim().toLowerCase()
+            );
+
+            if (duplicado) {
+                return error(
+                    res,
+                    409,
+                    "Ya existe un colegio con ese nombre"
+                );
+            }
+
+            // ==================================
+            // CREAR COLEGIO ALIADO
+            // ==================================
+
+            const colegio = new Colegio(
+                datos.generarId("colegio"),
+                nombre.trim(),
+                direccion.trim(),
+                telefono.trim(),
+                correo.trim(),
+                true
+            );
+
+            // ==================================
+            // GUARDAR
+            // ==================================
+
+            datos.colegios.push(colegio);
+
+            return res.status(201).json({
+                mensaje: "Colegio aliado registrado correctamente",
+                colegio: colegioDTO(colegio)
+            });
+
+        } catch (err) {
 
             return error(
                 res,
                 400,
-                "Nombre y estado de aliado invalidos"
+                err.message
             );
         }
-
-        const duplicado = datos.colegios.some(
-            c => c.nombre.toLowerCase() ===
-                nombre.trim().toLowerCase()
-        );
-
-        if (duplicado) {
-            return error(res, 409, "Colegio duplicado");
-        }
-
-        const colegio = new Colegio(
-            datos.generarId("colegio"),
-            nombre.trim(),
-            direccion,
-            telefono,
-            correo,
-            aliado
-        );
-
-        datos.colegios.push(colegio);
-
-        return res.status(201).json({
-            mensaje: "Colegio registrado",
-            colegio: colegioDTO(colegio)
-        });
     }
 );
 
-// Actualizar colegio
+// ==========================================
+// ACTUALIZAR COLEGIO
+// ==========================================
+
 router.patch(
     "/colegios/:id",
     requiereRol("SEEA"),
     (req, res) => {
+
         const colegio = buscarPorId(
             datos.colegios,
             req.params.id
         );
 
         if (!colegio) {
-            return error(res, 404, "Colegio no encontrado");
+            return error(
+                res,
+                404,
+                "Colegio no encontrado"
+            );
         }
 
         const body = req.body || {};
 
+        // ==================================
+        // NO PERMITIR CAMBIAR ALIADO
+        // ==================================
+
+        if (body.aliado !== undefined) {
+            return error(
+                res,
+                403,
+                "La condicion de aliado no puede modificarse desde esta ruta"
+            );
+        }
+
+        // ==================================
+        // VALIDAR NOMBRE
+        // ==================================
+
         if (body.nombre !== undefined) {
+
             if (!textoValido(body.nombre)) {
-                return error(res, 400, "Nombre invalido");
+                return error(
+                    res,
+                    400,
+                    "El nombre del colegio no es valido"
+                );
             }
 
             const duplicado = datos.colegios.some(
-                c => c !== colegio &&
-                    c.nombre.toLowerCase() ===
+                c =>
+                    c !== colegio &&
+                    c.getNombre().trim().toLowerCase() ===
                     body.nombre.trim().toLowerCase()
             );
 
             if (duplicado) {
-                return error(res, 409, "Nombre duplicado");
+                return error(
+                    res,
+                    409,
+                    "Ya existe otro colegio con ese nombre"
+                );
             }
         }
 
-        if (body.aliado !== undefined &&
-            typeof body.aliado !== "boolean") {
+        // ==================================
+        // VALIDAR Y ACTUALIZAR CAMPOS
+        // ==================================
 
-            return error(res, 400, "Aliado invalido");
-        }
-
-        const campos = [
-            "nombre",
-            "direccion",
-            "telefono",
-            "correo",
-            "aliado"
+        const cambios = [
+            {
+                campo: "nombre",
+                metodo: "setNombre"
+            },
+            {
+                campo: "direccion",
+                metodo: "setDireccion"
+            },
+            {
+                campo: "telefono",
+                metodo: "setTelefono"
+            },
+            {
+                campo: "correo",
+                metodo: "setCorreo"
+            }
         ];
 
-        campos.forEach(campo => {
-            if (body[campo] !== undefined) {
-                colegio[campo] =
-                    campo === "nombre"
-                        ? body[campo].trim()
-                        : body[campo];
-            }
-        });
+        // Validar antes de modificar
+        for (const { campo } of cambios) {
 
-        return res.json({
-            mensaje: "Colegio actualizado",
+            if (
+                body[campo] !== undefined &&
+                typeof body[campo] !== "string"
+            ) {
+                return error(
+                    res,
+                    400,
+                    `El campo ${campo} debe ser texto`
+                );
+            }
+        }
+
+        if (
+            body.correo !== undefined &&
+            body.correo !== "" &&
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.correo)
+        ) {
+            return error(
+                res,
+                400,
+                "El correo no es valido"
+            );
+        }
+
+        for (const { campo, metodo } of cambios) {
+
+            if (body[campo] !== undefined) {
+
+                const actualizado = colegio[metodo](
+                    body[campo].trim()
+                );
+
+                if (actualizado === false) {
+                    return error(
+                        res,
+                        400,
+                        `No se pudo actualizar ${campo}`
+                    );
+                }
+            }
+        }
+
+        // ==================================
+        // RESPUESTA
+        // ==================================
+
+        return res.status(200).json({
+            mensaje: "Colegio actualizado correctamente",
             colegio: colegioDTO(colegio)
         });
     }
 );
+
 
 // Eliminar colegio
 router.delete(
