@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Registro | SEEA UVG</title>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body class="login-page">
+
+    <main class="login-card registro-card">
+
+        <div class="brand-mark">
+            UVG <span>SEEA</span>
+        </div>
+
+        <p class="eyebrow">
+            Sistema de Experiencias Educativas
+        </p>
+
+        <h1>Crear cuenta</h1>
+
+        <!-- SELECCION DE USUARIO -->
+
+        <section id="seleccion-tipo">
+
+            <p>¿Qué tipo de usuario deseas crear?</p>
+
+            <div class="registro-opciones">
+
+                <button
+                    class="registro-opcion"
+                    type="button"
+                    data-tipo="COLEGIO"
+                >
+                    Usuario de colegio
+                </button>
+
+                <button
+                    class="registro-opcion"
+                    type="button"
+                    data-tipo="VOLUNTARIO"
+                >
+                    Voluntario UVG
+                </button>
+
+            </div>
+
+        </section>
+
+        <!-- FORMULARIO -->
+
+        <section id="seccion-formulario" hidden>
+
+            <button
+                class="secondary"
+                type="button"
+                id="volver-tipo"
+            >
+                Cambiar tipo
+            </button>
+
+            <h2 id="titulo-registro"></h2>
+
+            <form id="registro-form">
+
+                <input
+                    type="hidden"
+                    name="tipo"
+                >
+
+                <label>
+                    Nombre completo
+
+                    <input
+                        name="nombre"
+                        required
+                        maxlength="120"
+                    >
+                </label>
+
+                <label>
+                    Correo electrónico
+
+                    <input
+                        name="correo"
+                        type="email"
+                        id="correo-registro"
+                        required
+                    >
+                </label>
+
+                <!-- USUARIO COLEGIO -->
+
+                <div id="campos-colegio" hidden>
+
+                    <label>
+                        Teléfono
+
+                        <input
+                            name="telefono"
+                            type="tel"
+                        >
+                    </label>
+
+                    <label>
+                        Colegio registrado
+
+                        <select
+                            name="idColegio"
+                            id="idColegio"
+                        ></select>
+                    </label>
+
+                    <p
+                        class="hint"
+                        id="direccion-colegio"
+                    ></p>
+
+                </div>
+
+                <!-- VOLUNTARIO -->
+
+                <div id="campos-voluntario" hidden>
+
+                    <label>
+                        Carnet
+
+                        <input name="carnet">
+                    </label>
+
+                    <label>
+                        Carrera
+
+                        <select
+                            name="carrera"
+                            id="carrera"
+                        ></select>
+                    </label>
+
+                    <div id="campo-otra-carrera" hidden>
+
+                        <label>
+                            Escribí tu carrera
+
+                            <input
+                                name="otraCarrera"
+                                maxlength="120"
+                            >
+                        </label>
+
+                    </div>
+
+                </div>
+
+                <!-- CONTRASEÑAS -->
+
+                <label>
+                    Contraseña
+
+                    <input
+                        name="contrasena"
+                        type="password"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required
+                    >
+                </label>
+
+                <label>
+                    Confirmar contraseña
+
+                    <input
+                        name="confirmarContrasena"
+                        type="password"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required
+                    >
+                </label>
+
+                <button
+                    type="submit"
+                    class="primary registro-enviar"
+                >
+                    Crear cuenta
+                </button>
+
+            </form>
+
+        </section>
+
+        <p
+            id="aviso"
+            role="status"
+            aria-live="polite"
+        ></p>
+
+        <p class="registro-footer">
+            ¿Ya tenés cuenta?
+            <a href="/">Iniciar sesión</a>
+        </p>
+
+    </main>
+
+    <script src="/registro.js" defer></script>
+
+</body>
+</html>

@@ -585,3 +585,245 @@ td .actions button {
         padding: 18px;
     }
 }
+
+
+/* ==========================================
+   REGISTRO DE USUARIOS - SEEA UVG
+========================================== */
+
+.registro-card {
+    width: min(94%, 650px);
+    max-height: 94vh;
+    overflow-y: auto;
+}
+
+.registro-card h1 {
+    color: var(--green, #075d42);
+    margin-bottom: 12px;
+}
+
+.registro-card h2 {
+    color: var(--green, #075d42);
+    font-size: 21px;
+    margin: 20px 0;
+}
+
+/* ==========================================
+   SELECCION DE TIPO DE USUARIO
+========================================== */
+
+.registro-opciones {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 22px;
+    margin-bottom: 24px;
+}
+
+.registro-opcion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 155px;
+    padding: 22px;
+
+    background: #f5faf7;
+    border: 2px solid #d7e9de;
+    border-radius: 14px;
+
+    color: #075d42;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.registro-opcion:hover {
+    background: #e8f4ed;
+    border-color: #075d42;
+    transform: translateY(-3px);
+}
+
+.registro-opcion:focus-visible {
+    outline: 3px solid #849fff;
+    outline-offset: 3px;
+}
+
+/* ==========================================
+   FORMULARIO DE REGISTRO
+========================================== */
+
+#seccion-formulario {
+    margin-top: 20px;
+}
+
+#seccion-formulario form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#seccion-formulario label {
+    display: block;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+#seccion-formulario input,
+#seccion-formulario select {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+
+    border: 1px solid #dae5df;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #18392f;
+}
+
+#seccion-formulario input:focus,
+#seccion-formulario select:focus {
+    outline: 3px solid rgba(10, 129, 80, 0.15);
+    border-color: #14835e;
+}
+
+/* ==========================================
+   CAMPOS ESPECIFICOS
+========================================== */
+
+#campos-colegio,
+#campos-voluntario {
+    margin-top: 12px;
+}
+
+#campo-otra-carrera {
+    margin-top: 10px;
+}
+
+#direccion-colegio {
+    color: #62766d;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+/* ==========================================
+   BOTONES
+========================================== */
+
+.registro-enviar {
+    display: block;
+    width: 100%;
+
+    margin-top: 12px;
+    padding: 13px 18px;
+
+    background: #075d42;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 9px;
+
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.registro-enviar:hover {
+    background: #087854;
+}
+
+.registro-enviar:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+#volver-tipo {
+    margin-bottom: 12px;
+}
+
+/* ==========================================
+   ENLACE DE INICIO DE SESION
+========================================== */
+
+.registro-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.registro-footer a {
+    color: #075d42;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.registro-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================
+   MENSAJES
+========================================== */
+
+.registro-card .notice {
+    padding: 12px 15px;
+    margin-top: 15px;
+
+    border-radius: 9px;
+    background: #e8f4ed;
+    color: #075d42;
+}
+
+.registro-card .notice.error {
+    background: #ffecec;
+    color: #b43737;
+}
+
+/* ==========================================
+   ELEMENTOS OCULTOS
+========================================== */
+
+[hidden] {
+    display: none !important;
+}
+
+/* ==========================================
+   DISEÑO RESPONSIVO
+========================================== */
+
+@media (max-width: 600px) {
+
+    .registro-card {
+        width: 96%;
+        padding: 24px;
+        max-height: none;
+    }
+
+    .registro-opciones {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .registro-opcion {
+        min-height: 110px;
+        padding: 18px;
+    }
+
+    .registro-card h1 {
+        font-size: 25px;
+    }
+
+    .registro-card h2 {
+        font-size: 19px;
+    }
+}

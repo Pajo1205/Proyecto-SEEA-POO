@@ -3,10 +3,6 @@
 <html lang="es">
 
 <head>
-    <!-- ==========================================
-         CONFIGURACION GENERAL
-    =========================================== -->
-
     <meta charset="UTF-8">
 
     <meta
@@ -16,28 +12,15 @@
 
     <title>Iniciar Sesión | SEEA - UVG</title>
 
-    <!-- ==========================================
-         ESTILOS DEL SISTEMA
-    =========================================== -->
-
     <link
         rel="stylesheet"
         href="/style.css"
     >
-
 </head>
 
 <body class="login-page">
 
-    <!-- ==========================================
-         CONTENEDOR PRINCIPAL
-    =========================================== -->
-
     <main class="login-card">
-
-        <!-- ======================================
-             IDENTIDAD VISUAL UVG / SEEA
-        ======================================= -->
 
         <header>
 
@@ -49,9 +32,7 @@
                 Sistema de Experiencias Educativas
             </p>
 
-            <h1>
-                Bienvenido
-            </h1>
+            <h1>Bienvenido</h1>
 
             <p>
                 Iniciá sesión para acceder
@@ -60,16 +41,11 @@
 
         </header>
 
-        <!-- ======================================
-             FORMULARIO DE INICIO DE SESION
-        ======================================= -->
+        <!-- INICIO DE SESION -->
 
         <form id="login-form">
 
-            <!-- CORREO ELECTRONICO -->
-
             <label for="correo">
-
                 Correo electrónico
 
                 <input
@@ -80,13 +56,9 @@
                     autocomplete="username"
                     required
                 >
-
             </label>
 
-            <!-- CONTRASEÑA -->
-
             <label for="contrasena">
-
                 Contraseña
 
                 <input
@@ -97,10 +69,7 @@
                     autocomplete="current-password"
                     required
                 >
-
             </label>
-
-            <!-- BOTON INGRESAR -->
 
             <button
                 type="submit"
@@ -111,35 +80,26 @@
 
         </form>
 
-        <!-- ======================================
-             MENSAJES DEL SISTEMA
-        ======================================= -->
-
         <div
             id="aviso"
             role="status"
             aria-live="polite"
         ></div>
 
-        <!-- ======================================
-             INFORMACION ADICIONAL
-        ======================================= -->
+        <!-- REGISTRO -->
 
         <footer>
 
             <p class="small">
-                Las cuentas de colegios y voluntarios
-                son creadas por el personal autorizado
-                de SEEA.
+                ¿No tenés una cuenta?
+                <a href="/registro">
+                    Registrate aquí
+                </a>.
             </p>
 
         </footer>
 
     </main>
-
-    <!-- ==========================================
-         JAVASCRIPT DEL LOGIN
-    =========================================== -->
 
     <script
         src="/login.js"
@@ -147,5 +107,4 @@
     ></script>
 
 </body>
-
 </html>

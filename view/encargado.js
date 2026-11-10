@@ -1,4 +1,3 @@
-
 (async () => {
 
     // ==========================================
@@ -200,7 +199,7 @@
                     "Rechazar",
                     "danger",
                     () => {
-                        if (!confirmar("¿Rechazar solicitud?")) {
+                        if (!confirmar("Â¿Rechazar solicitud?")) {
                             return;
                         }
 
@@ -307,7 +306,7 @@
                     () => {
 
                         if (!confirmar(
-                            `¿Eliminar ${colegio.nombre}?`
+                            `Â¿Eliminar ${colegio.nombre}?`
                         )) {
                             return;
                         }
@@ -324,7 +323,7 @@
 
             return [
                 colegio.nombre,
-                `${colegio.correo || "-"} · ${colegio.telefono || "-"}`,
+                `${colegio.correo || "-"} Â· ${colegio.telefono || "-"}`,
                 colegio.aliado ? "Aliado" : "No aliado",
                 acciones
             ];
@@ -370,7 +369,7 @@
         }
 
         const aliado = confirmar(
-            "¿Es colegio aliado?\nAceptar = Si / Cancelar = No"
+            "Â¿Es colegio aliado?\nAceptar = Si / Cancelar = No"
         );
 
         await ejecutarAccion(
@@ -472,7 +471,7 @@
                     "danger",
                     () => {
 
-                        if (!confirmar("¿Eliminar horario?")) {
+                        if (!confirmar("Â¿Eliminar horario?")) {
                             return;
                         }
 
@@ -555,7 +554,7 @@
                         "danger",
                         () => {
 
-                            if (!confirmar("¿Rechazar solicitud?")) {
+                            if (!confirmar("Â¿Rechazar solicitud?")) {
                                 return;
                             }
 
@@ -584,7 +583,7 @@
                         () => {
 
                             if (!confirmar(
-                                "¿Cancelar esta solicitud?"
+                                "Â¿Cancelar esta solicitud?"
                             )) {
                                 return;
                             }
@@ -611,7 +610,7 @@
                         () => {
 
                             if (!confirmar(
-                                "¿Eliminar definitivamente?"
+                                "Â¿Eliminar definitivamente?"
                             )) {
                                 return;
                             }
@@ -1126,188 +1125,57 @@
     // ==========================================
 
     async function usuarios(root) {
+        root.append(crearEncabezado(
+            "GestiÃ³n de usuarios",
+            "Crear encargados SEEA, consultar y eliminar cuentas."
+        ));
 
-        root.append(
-            crearEncabezado(
-                "Gestion de usuarios",
-                "Creacion de cuentas y asignacion de roles."
-            )
-        );
-
-        const [
-            usuariosRegistrados,
-            colegiosRegistrados
-        ] = await Promise.all([
-            S.api("/usuarios"),
-            S.api("/colegios")
-        ]);
-
-        // CREAR USUARIO
-
-        const registro = S.tarjeta(
-            "Crear cuenta de usuario"
-        );
-
-        registro.append(
-            S.formulario(
-                [
-                    {
-                        nombre: "nombre",
-                        etiqueta: "Nombre",
-                        required: true
-                    },
-                    {
-                        nombre: "correo",
-                        etiqueta: "Correo electronico",
-                        tipo: "email",
-                        required: true
-                    },
-                    {
-                        nombre: "contrasena",
-                        etiqueta: "Contrasena inicial (minimo 8 caracteres)",
-                        tipo: "password",
-                        required: true
-                    },
-                    {
-                        nombre: "tipo",
-                        etiqueta: "Rol",
-                        tipo: "select",
-
-                        opciones: [
-                            {
-                                valor: "COLEGIO",
-                                texto: "Usuario Colegio"
-                            },
-                            {
-                                valor: "VOLUNTARIO",
-                                texto: "Voluntario"
-                            },
-                            {
-                                valor: "SEEA",
-                                texto: "Encargado SEEA"
-                            }
-                        ]
-                    },
-                    {
-                        nombre: "idColegio",
-                        etiqueta: "Colegio asociado",
-                        tipo: "select",
-
-                        opciones: [
-                            {
-                                valor: "",
-                                texto: "Ninguno"
-                            },
-
-                            ...colegiosRegistrados.map(
-                                colegio => ({
-                                    valor: colegio.id,
-                                    texto: colegio.nombre
-                                })
-                            )
-                        ]
-                    },
-                    {
-                        nombre: "telefono",
-                        etiqueta: "Telefono"
-                    },
-                    {
-                        nombre: "carnet",
-                        etiqueta: "Carnet del voluntario"
-                    },
-                    {
-                        nombre: "carrera",
-                        etiqueta: "Carrera"
-                    },
-                    {
-                        nombre: "puesto",
-                        etiqueta: "Puesto en SEEA"
-                    }
-                ],
-
-                async formulario => {
-
-                    const contrasena =
-                        S.val(formulario, "contrasena");
-
-                    if (contrasena.length < 8) {
-                        S.aviso(
-                            "La contrasena debe tener minimo 8 caracteres",
-                            true
-                        );
-                        return false;
-                    }
-
-                    await S.post("/usuarios", {
-
-                        nombre: S.val(formulario, "nombre"),
-
-                        correo: S.val(formulario, "correo"),
-
-                        contrasena,
-
-                        tipo: S.val(formulario, "tipo"),
-
-                        idColegio: S.num(
-                            formulario,
-                            "idColegio"
-                        ),
-
-                        telefono: S.val(
-                            formulario,
-                            "telefono"
-                        ),
-
-                        carnet: S.val(
-                            formulario,
-                            "carnet"
-                        ),
-
-                        carrera: S.val(
-                            formulario,
-                            "carrera"
-                        ),
-
-                        puesto: S.val(
-                            formulario,
-                            "puesto"
-                        )
-                    });
-
-                    await recargar();
-
-                    S.aviso("Usuario creado correctamente");
-                },
-
-                "Crear usuario"
-            )
-        );
-
+        const usuariosRegistrados = await S.api("/usuarios");
+        const registro = S.tarjeta("Crear encargado SEEA");
+        registro.append(S.formulario([
+            { nombre: "nombre", etiqueta: "Nombre completo", required: true },
+            { nombre: "correo", etiqueta: "Correo electrÃ³nico", tipo: "email", required: true },
+            { nombre: "contrasena", etiqueta: "ContraseÃ±a (mÃ­nimo 8 caracteres)", tipo: "password", required: true },
+            { nombre: "puesto", etiqueta: "Puesto en SEEA", required: true }
+        ], async formulario => {
+            const contrasena = S.val(formulario, "contrasena");
+            if (contrasena.length < 8) throw new Error("La contraseÃ±a debe tener al menos 8 caracteres");
+            await S.post("/usuarios", {
+                tipo: "SEEA",
+                nombre: S.val(formulario, "nombre"),
+                correo: S.val(formulario, "correo"),
+                contrasena,
+                puesto: S.val(formulario, "puesto")
+            });
+            await recargar();
+            S.aviso("Encargado SEEA creado correctamente");
+        }, "Crear encargado"));
         root.append(registro);
 
-        // LISTADO DE USUARIOS
-
-        const listado = S.tarjeta(
-            "Usuarios registrados"
-        );
-
-        const filas = usuariosRegistrados.map(usuario => [
-            usuario.nombre,
-            usuario.correo,
-            usuario.rol
-        ]);
-
-        listado.append(
-            S.tabla(
-                [
-                    "Nombre",
-                    "Correo",
-                    "Rol"
-                ],
-                filas
-            )
-        );
-
+        const listado = S.tarjeta("Usuarios registrados");
+        listado.append(S.tabla(
+            ["Nombre", "Correo", "Rol", "InformaciÃ³n", "Acciones"],
+            usuariosRegistrados.map(usuario => {
+                const acciones = S.nodo("div", "actions");
+                if (usuario.id !== S.yo.id) {
+                    acciones.append(S.boton("Eliminar", "danger", async () => {
+                        if (!confirmar(`Â¿Eliminar la cuenta de ${usuario.nombre}?`)) return;
+                        await ejecutarAccion(
+                            () => S.del(`/usuarios/${usuario.id}`),
+                            "Usuario eliminado correctamente"
+                        );
+                    }));
+                } else {
+                    acciones.append(S.crear("span", "Tu cuenta", "hint"));
+                }
+                const detalle = usuario.rol === "VOLUNTARIO"
+                    ? `${usuario.carnet || ""} Â· ${usuario.carrera || ""}`
+                    : usuario.rol === "COLEGIO"
+                        ? `Colegio #${usuario.idColegio || "-"}`
+                        : (usuario.puesto || "Encargado");
+                return [usuario.nombre, usuario.correo, usuario.rol, detalle, acciones];
+            })
+        ));
         root.append(listado);
     }
 

@@ -5,14 +5,17 @@ const session = require("express-session");
 const bcrypt = require("bcryptjs");
 
 // ==========================================
-// IMPORTAR MODELO Y CONTROLADOR
+// IMPORTAR MODELO Y CONTROLADORES
 // ==========================================
 
 const datos = require("./datos");
 
 const EncargadoSEEA = require("./Modelo/EncargadoSEEA");
 
+
 const { router: api } = require("./controller/api");
+
+const registroController = require("./controller/registroController");
 
 // ==========================================
 // CONFIGURACION DEL SERVIDOR
@@ -84,10 +87,12 @@ async function inicializarAdministrador() {
         );
     }
 
+    const correoNormalizado = correo.trim().toLowerCase();
+
     const existe = datos.usuarios.some(
         usuario =>
-            usuario.correo.toLowerCase() ===
-            correo.trim().toLowerCase()
+            usuario.getCorreo().toLowerCase() ===
+            correoNormalizado
     );
 
     if (existe) {
@@ -99,7 +104,7 @@ async function inicializarAdministrador() {
     const administrador = new EncargadoSEEA(
         datos.generarId("usuario"),
         "Administrador SEEA",
-        correo.trim().toLowerCase(),
+        correoNormalizado,
         hash,
         "Administrador"
     );
@@ -110,7 +115,7 @@ async function inicializarAdministrador() {
 }
 
 // ==========================================
-// FUNCIONES DE AUTENTICACION
+// OBTENER USUARIO AUTENTICADO
 // ==========================================
 
 function obtenerUsuario(req) {
@@ -122,7 +127,7 @@ function obtenerUsuario(req) {
     }
 
     return datos.usuarios.find(
-        usuario => usuario.id === id
+        usuario => usuario.getId() === id
     ) || null;
 }
 
@@ -173,7 +178,6 @@ function requiereRol(rolPermitido) {
 // ARCHIVOS PUBLICOS
 // ==========================================
 
-// Estilos generales
 app.get("/style.css", (req, res) => {
 
     res.sendFile(
@@ -181,11 +185,17 @@ app.get("/style.css", (req, res) => {
     );
 });
 
-// JavaScript del inicio de sesion
 app.get("/login.js", (req, res) => {
 
     res.sendFile(
         path.join(VIEW_PATH, "login.js")
+    );
+});
+
+app.get("/registro.js", (req, res) => {
+
+    res.sendFile(
+        path.join(VIEW_PATH, "registro.js")
     );
 });
 
@@ -210,12 +220,36 @@ app.get("/", (req, res) => {
     };
 
     return res.redirect(
-        rutas[usuario.rol] || "/"
+        rutas[usuario.rol] || "/login"
     );
 });
 
 // ==========================================
-// RUTAS DE LA API
+// PAGINA DE REGISTRO
+// ==========================================
+
+app.get("/registro", (req, res) => {
+
+    if (obtenerUsuario(req)) {
+        return res.redirect("/");
+    }
+
+    return res.sendFile(
+        path.join(VIEW_PATH, "registro.html")
+    );
+});
+
+// ==========================================
+// REGISTRO PUBLICO
+// ==========================================
+
+app.use(
+    "/api/registro",
+    registroController.router
+);
+
+// ==========================================
+// API PRINCIPAL
 // ==========================================
 
 app.use("/api", api);
@@ -236,7 +270,7 @@ app.get(
 );
 
 // ==========================================
-// PORTAL ENCARGADO SEEA
+// PORTAL ENCARGADO
 // ==========================================
 
 app.get(
@@ -319,13 +353,13 @@ app.get(
 
 app.use((req, res) => {
 
-    res.status(404).json({
+    return res.status(404).json({
         mensaje: "La ruta solicitada no existe"
     });
 });
 
 // ==========================================
-// MANEJO GENERAL DE ERRORES
+// MANEJO DE ERRORES
 // ==========================================
 
 app.use((error, req, res, next) => {
@@ -335,7 +369,7 @@ app.use((error, req, res, next) => {
         error
     );
 
-    res.status(500).json({
+    return res.status(500).json({
         mensaje: "Error interno del servidor"
     });
 });
@@ -348,10 +382,8 @@ async function iniciarSistema() {
 
     try {
 
-        // Crear administrador inicial
         await inicializarAdministrador();
 
-        // Iniciar servidor Express
         app.listen(PORT, () => {
 
             console.log("================================");
@@ -364,6 +396,7 @@ async function iniciarSistema() {
 
             console.log("");
             console.log("Portales disponibles:");
+            console.log("- Registro: /registro");
             console.log("- Encargado: /encargado");
             console.log("- Colegio: /colegio");
             console.log("- Voluntario: /voluntario");
@@ -382,9 +415,5 @@ async function iniciarSistema() {
         process.exitCode = 1;
     }
 }
-
-// ==========================================
-// EJECUTAR
-// ==========================================
 
 iniciarSistema();

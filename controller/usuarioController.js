@@ -11,6 +11,11 @@ const datos = require("../datos");
 // FUNCIONES AUXILIARES
 // ==========================================
 
+
+// Crear Usuario Voluntario
+    function crearUsuarioVoluntario (nombre, correo, contrasena, carnet, carrera) {
+        
+    }
 // Convertir usuario a informacion publica
 function usuarioPublico(usuario) {
 

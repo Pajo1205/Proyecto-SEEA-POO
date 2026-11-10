@@ -1,9 +1,6 @@
 
 const Usuario = require("./Usuario");
-
-// ==========================================
-// CLASE VOLUNTARIO
-// ==========================================
+const Carrera = require("./Carrera");
 
 class Voluntario extends Usuario {
 
@@ -20,18 +17,54 @@ class Voluntario extends Usuario {
         carrera
     ) {
 
-        // Atributos heredados
         super(id, nombre, correo, contrasena);
 
-        // Identificar tipo de usuario
+        if (!Voluntario.correoInstitucionalValido(correo)) {
+            throw new Error(
+                "El correo debe terminar en @uvg.edu.gt"
+            );
+        }
+
+        if (
+            typeof carnet !== "string" ||
+            carnet.trim() === ""
+        ) {
+            throw new Error(
+                "El carnet universitario es obligatorio"
+            );
+        }
+
+        if (
+            typeof carrera !== "string" ||
+            carrera.trim() === ""
+        ) {
+            throw new Error(
+                "La carrera universitaria es obligatoria"
+            );
+        }
+
         this.rol = "VOLUNTARIO";
 
-        // Atributos propios
-        this.carnet = carnet;
-        this.carrera = carrera;
+        this.carnet = carnet.trim();
+        this.carrera = carrera.trim();
 
-        // Disponibilidades registradas
         this.disponibilidades = [];
+    }
+
+    // ======================================
+    // VALIDACIONES
+    // ======================================
+
+    static correoInstitucionalValido(correo) {
+
+        return (
+            typeof correo === "string" &&
+            /^[^\s@]+@uvg\.edu\.gt$/i.test(correo.trim())
+        );
+    }
+
+    static obtenerCarreras() {
+        return Object.values(Carrera);
     }
 
     // ======================================
@@ -74,11 +107,14 @@ class Voluntario extends Usuario {
 
     setCarrera(carrera) {
 
-        if (typeof carrera !== "string") {
+        if (
+            typeof carrera !== "string" ||
+            carrera.trim() === ""
+        ) {
             return false;
         }
 
-        this.carrera = carrera;
+        this.carrera = carrera.trim();
 
         return true;
     }
@@ -93,7 +129,6 @@ class Voluntario extends Usuario {
             return false;
         }
 
-        // Evitar IDs duplicados
         const idDuplicado = this.disponibilidades.some(
             d => d.getId() === disponibilidad.getId()
         );
@@ -102,7 +137,6 @@ class Voluntario extends Usuario {
             return false;
         }
 
-        // Evitar disponibilidades identicas
         const duplicada = this.disponibilidades.some(
             d =>
                 d.getFecha() === disponibilidad.getFecha() &&
@@ -168,7 +202,6 @@ class Voluntario extends Usuario {
             return false;
         }
 
-        // La visita debe estar programada
         if (visita.getEstado() !== "PROGRAMADA") {
             return false;
         }
@@ -177,12 +210,10 @@ class Voluntario extends Usuario {
             .getSolicitud()
             .getHorario();
 
-        // Verificar disponibilidad
         if (!this.estaDisponible(horario)) {
             return false;
         }
 
-        // Verificar que no este inscrito
         const yaInscrito = visita.getAsignaciones().some(
             asignacion =>
                 asignacion.getVoluntario().getId() === this.id &&
@@ -206,8 +237,6 @@ class Voluntario extends Usuario {
             return false;
         }
 
-        // Comprobar que la asignacion
-        // pertenece al voluntario
         if (
             asignacion.getVoluntario().getId() !== this.id
         ) {
@@ -233,9 +262,5 @@ Carrera: ${this.carrera}
 Disponibilidades registradas: ${this.disponibilidades.length}`;
     }
 }
-
-// ==========================================
-// EXPORTAR CLASE
-// ==========================================
 
 module.exports = Voluntario;
