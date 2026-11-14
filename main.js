@@ -15,7 +15,8 @@ const EncargadoSEEA = require("./Modelo/EncargadoSEEA");
 
 const { router: api } = require("./controller/api");
 
-const registroController = require("./controller/registroController");
+const registroModulo = require("./controller/registroController");
+const registroController = registroModulo.router || registroModulo;
 
 // ==========================================
 // CONFIGURACION DEL SERVIDOR
