@@ -348,6 +348,21 @@ app.get(
     }
 );
 
+// Modulos ES del frontend, protegidos por el mismo rol del portal.
+for (const [portal, rol] of [
+    ["encargado", "SEEA"],
+    ["colegio", "COLEGIO"],
+    ["voluntario", "VOLUNTARIO"]
+]) {
+    app.get(`/${portal}/:archivo`, requiereRol(rol), (req, res) => {
+        const archivo = req.params.archivo;
+        if (!/^[a-zA-Z]+\.js$/.test(archivo)) {
+            return res.status(404).send("Modulo no encontrado");
+        }
+        res.sendFile(path.join(VIEW_PATH, portal, archivo));
+    });
+}
+
 // ==========================================
 // RUTA NO ENCONTRADA
 // ==========================================

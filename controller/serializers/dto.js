@@ -11,6 +11,9 @@ function usuarioPublico(usuario) {
     if (usuario.rol === "COLEGIO") {
         resultado.idColegio = usuario.colegio.id;
         resultado.telefono = usuario.telefono;
+        resultado.rolColegio = usuario.getRolColegio?.() || "OTRO";
+        resultado.otroRolColegio = usuario.getOtroRolColegio?.() || "";
+        resultado.cargoColegio = usuario.getRolColegioDescripcion?.() || "No especificado";
     }
 
     if (usuario.rol === "VOLUNTARIO") {

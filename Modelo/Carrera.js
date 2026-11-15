@@ -1,9 +1,6 @@
 
 const Carrera = Object.freeze({
 
-    // ======================================
-    // INGENIERIA
-    // ======================================
 
     BIOMEDICA: "Ingeniería Biomédica",
     BIOTECNOLOGIA: "Ingeniería en Biotecnología Industrial",
@@ -18,10 +15,6 @@ const Carrera = Object.freeze({
     MECATRONICA: "Ingeniería Mecatrónica",
     QUIMICA_INDUSTRIAL: "Ingeniería Química Industrial",
 
-    // ======================================
-    // CIENCIAS
-    // ======================================
-
     BIOLOGIA: "Biología",
     BIOQUIMICA: "Bioquímica y Microbiología",
     BIOTECNOLOGIA_MOLECULAR: "Biotecnología Molecular",
@@ -31,25 +24,16 @@ const Carrera = Object.freeze({
     QUIMICA: "Química",
     QUIMICA_FARMACEUTICA: "Química Farmacéutica",
 
-    // ======================================
-    // CIENCIAS SOCIALES
-    // ======================================
 
     ANTROPOLOGIA: "Antropología",
     ARQUEOLOGIA: "Arqueología",
     PSICOLOGIA: "Psicología",
     RELACIONES_INTERNACIONALES: "Relaciones Internacionales",
 
-    // ======================================
-    // ARQUITECTURA Y DISENO
-    // ======================================
 
     ARQUITECTURA: "Arquitectura",
     DISENO_PRODUCTO: "Diseño de Producto e Innovación",
 
-    // ======================================
-    // NEGOCIOS
-    // ======================================
 
     ADMINISTRACION: "Ingeniería en Ciencia de la Administración",
     ECONOMIA: "Economía Analítica",
@@ -57,9 +41,6 @@ const Carrera = Object.freeze({
     MARKETING: "International Marketing and Business Analytics",
     COMUNICACION: "Comunicación Estratégica",
 
-    // ======================================
-    // EDUCACION Y ARTES
-    // ======================================
 
     EDUCACION: "Educación",
     EDUCACION_MUSICAL: "Educación Musical",
@@ -67,10 +48,6 @@ const Carrera = Object.freeze({
     PSICOPEDAGOGIA: "Psicopedagogía",
     ENGLISH_TEACHING: "English Language Teaching",
     MUSICA: "Composición y Producción Musical",
-
-    // ======================================
-    // OPCION ADICIONAL
-    // ======================================
 
     OTRO: "Otro"
 });

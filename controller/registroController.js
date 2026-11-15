@@ -8,6 +8,7 @@ const Colegio = require("../Modelo/Colegio");
 const UsuarioColegio = require("../Modelo/UsuarioColegio");
 const Voluntario = require("../Modelo/Voluntario");
 const Carrera = require("../Modelo/Carrera");
+const RolesColegio = require("../Modelo/RolesColegio");
 
 const router = express.Router();
 
@@ -61,6 +62,9 @@ function usuarioPublico(usuario) {
         resultado.idColegio = usuario.getColegio().getId();
         resultado.colegio = usuario.getColegio().getNombre();
         resultado.aliado = usuario.getColegio().esAliado();
+        resultado.rolColegio = usuario.getRolColegio();
+        resultado.otroRolColegio = usuario.getOtroRolColegio();
+        resultado.cargoColegio = usuario.getRolColegioDescripcion();
     }
 
     if (usuario.rol === "VOLUNTARIO") {
@@ -98,6 +102,13 @@ router.get("/carreras", (req, res) => {
 });
 
 // ==========================================
+// ROLES DEL PERSONAL DE COLEGIOS
+// ==========================================
+router.get("/roles-colegio", (req, res) => {
+    return res.status(200).json(Object.values(RolesColegio));
+});
+
+// ==========================================
 // REGISTRO PUBLICO
 // ==========================================
 
@@ -113,6 +124,8 @@ router.post("/", async (req, res, next) => {
             idColegio,
             nombreColegio,
             direccionColegio,
+            rolColegio,
+            otroRolColegio,
             carnet,
             carrera,
             otraCarrera
@@ -196,6 +209,14 @@ router.post("/", async (req, res, next) => {
         // ==================================
 
         if (tipo === "COLEGIO") {
+
+            if (!Object.values(RolesColegio).includes(rolColegio)) {
+                return responderError(res, 400, "Seleccioná tu cargo en el colegio");
+            }
+            if (rolColegio === RolesColegio.OTRO &&
+                (!textoValido(otroRolColegio) || otroRolColegio.trim().length > 100)) {
+                return responderError(res, 400, "Especificá tu cargo en el colegio");
+            }
 
             if (
                 !textoValido(telefono) ||
@@ -384,7 +405,9 @@ router.post("/", async (req, res, next) => {
                 email,
                 hash,
                 telefono.trim(),
-                colegio
+                colegio,
+                rolColegio,
+                rolColegio === RolesColegio.OTRO ? otroRolColegio.trim() : ""
             );
 
             usuario.rol = "COLEGIO";

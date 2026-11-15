@@ -655,3 +655,6 @@ const SEEA = (() => {
     };
 
 })();
+
+// Disponible para los módulos ES de los tres portales.
+globalThis.SEEA = SEEA;

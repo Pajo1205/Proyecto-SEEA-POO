@@ -1,6 +1,7 @@
 
 const Usuario = require("./Usuario");
 const Solicitud = require("./Solicitud");
+const RolesColegio = require("./RolesColegio");
 
 // ==========================================
 // CLASE USUARIO COLEGIO
@@ -18,7 +19,9 @@ class UsuarioColegio extends Usuario {
         correo,
         contrasena,
         telefono,
-        colegio
+        colegio,
+        rolColegio = RolesColegio.OTRO,
+        otroRolColegio = "No especificado"
     ) {
 
         // Atributos heredados de Usuario
@@ -30,6 +33,7 @@ class UsuarioColegio extends Usuario {
         // Atributos propios
         this.telefono = telefono;
         this.colegio = colegio;
+        this.setRolColegio(rolColegio, otroRolColegio);
     }
 
     // ======================================
@@ -44,6 +48,20 @@ class UsuarioColegio extends Usuario {
         return this.telefono;
     }
 
+    getRolColegio() {
+        return this.rolColegio;
+    }
+
+    getOtroRolColegio() {
+        return this.otroRolColegio;
+    }
+
+    getRolColegioDescripcion() {
+        return this.rolColegio === RolesColegio.OTRO
+            ? this.otroRolColegio
+            : this.rolColegio;
+    }
+
     getColegio() {
         return this.colegio;
     }
@@ -51,6 +69,19 @@ class UsuarioColegio extends Usuario {
     // ======================================
     // SETTERS
     // ======================================
+
+    setRolColegio(rol, otro = "") {
+        if (!Object.values(RolesColegio).includes(rol)) {
+            throw new Error("Rol de colegio no válido");
+        }
+        if (rol === RolesColegio.OTRO &&
+            (typeof otro !== "string" || !otro.trim() || otro.trim().length > 100)) {
+            throw new Error("Debes especificar el rol del colegio");
+        }
+        this.rolColegio = rol;
+        this.otroRolColegio = rol === RolesColegio.OTRO ? otro.trim() : "";
+        return true;
+    }
 
     setTelefono(telefono) {
 
@@ -135,7 +166,8 @@ Nombre: ${this.nombre}
 Correo: ${this.correo}
 Rol: ${this.rol}
 Teléfono: ${this.telefono}
-Colegio: ${nombreColegio}`;
+Colegio: ${nombreColegio}
+Cargo en colegio: ${this.getRolColegioDescripcion()}`;
     }
 }
 

@@ -4,6 +4,8 @@ const aviso = document.getElementById("aviso");
 
 const selectorColegio = document.getElementById("idColegio");
 const selectorCarrera = document.getElementById("carrera");
+const selectorRolColegio = document.getElementById("rolColegio");
+const campoOtroRolColegio = document.getElementById("campo-otro-rol-colegio");
 
 const camposOtroColegio = document.getElementById(
     "campos-otro-colegio"
@@ -93,6 +95,9 @@ async function elegirTipo(tipo) {
     ).hidden = true;
 
     camposOtroColegio.hidden = true;
+    campoOtroRolColegio.hidden = true;
+    formulario.elements.rolColegio.required = esColegio;
+    formulario.elements.otroRolColegio.required = false;
 
     formulario.elements.telefono.required = esColegio;
     selectorColegio.required = esColegio;
@@ -124,6 +129,9 @@ async function elegirTipo(tipo) {
 
     try {
         if (esColegio) {
+            const rolesColegio = await obtener("/api/registro/roles-colegio");
+            selectorRolColegio.replaceChildren(new Option("Seleccionar cargo", ""));
+            rolesColegio.forEach(rol => selectorRolColegio.add(new Option(rol, rol)));
             colegios = await obtener(
                 "/api/registro/colegios"
             );
@@ -217,6 +225,16 @@ selectorColegio.addEventListener("change", () => {
 });
 
 // ==========================================
+// OTRO CARGO EN EL COLEGIO
+// ==========================================
+selectorRolColegio.addEventListener("change", () => {
+    const otro = selectorRolColegio.value === "OTRO";
+    campoOtroRolColegio.hidden = !otro;
+    formulario.elements.otroRolColegio.required = otro;
+    if (!otro) formulario.elements.otroRolColegio.value = "";
+});
+
+// ==========================================
 // OTRA CARRERA
 // ==========================================
 
@@ -264,6 +282,8 @@ formulario.addEventListener("submit", async evento => {
 
     if (tipo === "COLEGIO") {
         body.telefono = f.telefono.value.trim();
+        body.rolColegio = f.rolColegio.value;
+        body.otroRolColegio = f.otroRolColegio.value.trim();
 
         if (selectorColegio.value === "OTRO") {
             body.idColegio = "OTRO";
