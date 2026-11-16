@@ -75,7 +75,16 @@ export function crearModulo(S, contexto) {
                 {
                     nombre: "transporte",
                     etiqueta: "Medio de transporte",
-                    required: true
+                    tipo: "select",
+                    required: true,
+                    opciones: [
+                        { valor: "", texto: "Seleccionar transporte" },
+                        { valor: "Bus Escolar", texto: "Bus Escolar" },
+                        { valor: "Tipo Coaster", texto: "Tipo Coaster" },
+                        { valor: "Vehiculo Propio", texto: "Vehiculo Propio" },
+                        { valor: "Minibus", texto: "Minibus" },
+                        { valor: "Otro", texto: "Otro" }
+                    ]
                 },
                 {
                     nombre: "solicitaTour",
@@ -131,6 +140,11 @@ export function crearModulo(S, contexto) {
                         transporte: S.val(
                             formularioHTML,
                             "transporte"
+                        ),
+
+                        otroTransporte: S.val(
+                            formularioHTML,
+                            "otroTransporte"
                         ),
 
                         solicitaTour: S.bool(
@@ -191,6 +205,29 @@ export function crearModulo(S, contexto) {
 
             "Enviar solicitud"
         );
+
+        // Campo adicional que solo aparece al seleccionar "Otro".
+        const selectorTransporte = formulario.elements.namedItem("transporte");
+        const campoOtro = document.createElement("label");
+        campoOtro.textContent = "Especificá el medio de transporte";
+        const inputOtro = document.createElement("input");
+        inputOtro.type = "text";
+        inputOtro.name = "otroTransporte";
+        inputOtro.maxLength = 120;
+        inputOtro.placeholder = "Ej. Transporte contratado";
+        campoOtro.append(inputOtro);
+        campoOtro.hidden = true;
+        formulario.querySelector(".grid").append(campoOtro);
+
+        function actualizarOtroTransporte() {
+            const esOtro = selectorTransporte.value === "Otro";
+            campoOtro.hidden = !esOtro;
+            inputOtro.required = esOtro;
+            if (!esOtro) inputOtro.value = "";
+        }
+
+        selectorTransporte.addEventListener("change", actualizarOtroTransporte);
+        actualizarOtroTransporte();
 
         card.append(formulario);
 

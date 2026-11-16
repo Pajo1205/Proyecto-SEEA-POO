@@ -2,6 +2,7 @@
 
 // Rutas de solicitudes. Reciben dependencias compartidas del router principal.
 module.exports = function registrarSolicitudes(ctx) {
+    const Transporte = require("../../Modelo/Transporte");
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
 
 // ==========================================
@@ -54,6 +55,22 @@ router.post(
                 return error(res, 409, "Horario ocupado");
             }
 
+            // El backend valida la opción elegida, incluso si se modifica el HTML.
+            const opcionesTransporte = Object.values(Transporte);
+            if (!opcionesTransporte.includes(body.transporte)) {
+                return error(res, 400, "Seleccioná un medio de transporte válido");
+            }
+
+            let transporteFinal = body.transporte;
+            if (body.transporte === Transporte.OTRO) {
+                if (typeof body.otroTransporte !== "string" ||
+                    !body.otroTransporte.trim() ||
+                    body.otroTransporte.trim().length > 120) {
+                    return error(res, 400, "Especificá el medio de transporte (máximo 120 caracteres)");
+                }
+                transporteFinal = body.otroTransporte.trim();
+            }
+
             const solicitud = new Solicitud(
                 datos.generarId("solicitud"),
                 colegio,
@@ -61,7 +78,7 @@ router.post(
                 body.cantidadEstudiantes,
                 body.cantidadProfesores,
                 body.grado,
-                body.transporte,
+                transporteFinal,
                 body.solicitaTour,
                 body.solicitaCharla,
                 body.solicitaTaller,
