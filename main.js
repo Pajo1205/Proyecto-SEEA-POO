@@ -12,6 +12,9 @@ const datos = require("./datos");
 
 const EncargadoSEEA = require("./Modelo/EncargadoSEEA");
 
+const db = require("./database/db");
+const { cargarDatos } = require("./database/cargador");
+const persistencia = require("./database/persistencia");
 
 const { router: api } = require("./controller/api");
 
@@ -111,6 +114,8 @@ async function inicializarAdministrador() {
     );
 
     datos.usuarios.push(administrador);
+
+    persistencia.guardarUsuario(administrador);
 
     console.log("Administrador SEEA inicializado");
 }
@@ -397,6 +402,10 @@ app.use((error, req, res, next) => {
 async function iniciarSistema() {
 
     try {
+
+        db.obtenerDb();
+
+        cargarDatos(datos);
 
         await inicializarAdministrador();
 

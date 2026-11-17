@@ -4,6 +4,9 @@ const bcrypt = require("bcryptjs");
 
 const datos = require("../datos");
 
+const { transaccion } = require("../database/db");
+const persistencia = require("../database/persistencia");
+
 const Colegio = require("../Modelo/Colegio");
 const UsuarioColegio = require("../Modelo/UsuarioColegio");
 const Voluntario = require("../Modelo/Voluntario");
@@ -429,6 +432,15 @@ router.post("/", async (req, res, next) => {
         // ==================================
 
         datos.usuarios.push(usuario);
+
+        transaccion(() => {
+
+            if (crearColegioNuevo) {
+                persistencia.guardarColegio(colegio);
+            }
+
+            persistencia.guardarUsuario(usuario);
+        });
 
         return res.status(201).json({
             mensaje: "Cuenta registrada correctamente",
