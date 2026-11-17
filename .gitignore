@@ -5,3 +5,9 @@ postman/
 .gitignore
 run.sh
 
+# Base de datos SQLite local
+database/*.db
+database/*.db-shm
+database/*.db-wal
+database/*.sqlite
+
