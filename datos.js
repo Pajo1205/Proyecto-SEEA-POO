@@ -35,8 +35,53 @@ function generarId(tipo) {
     return contadores[tipo];
 }
 
-// Exportamos los arreglos y la función
+// Después de cargar datos desde SQL, los contadores deben
+// continuar desde el ID más alto para no repetir claves.
+function sincronizarContadores() {
+
+    const disponibilidades = [];
+
+    for (const usuario of datos.usuarios) {
+
+        if (Array.isArray(usuario.disponibilidades)) {
+
+            for (const disponibilidad of usuario.disponibilidades) {
+                disponibilidades.push(disponibilidad);
+            }
+        }
+    }
+
+    const listas = [
+        ["usuario", datos.usuarios],
+        ["colegio", datos.colegios],
+        ["horario", datos.horarios],
+        ["solicitud", datos.solicitudes],
+        ["visita", datos.visitas],
+        ["actividad", datos.actividades],
+        ["disponibilidad", disponibilidades],
+        ["asignacion", datos.asignaciones]
+    ];
+
+    for (const [tipo, lista] of listas) {
+
+        let maximo = 0;
+
+        for (const elemento of lista) {
+
+            const id = Number(elemento.id) || 0;
+
+            if (id > maximo) {
+                maximo = id;
+            }
+        }
+
+        contadores[tipo] = maximo;
+    }
+}
+
+// Exportamos los arreglos y las funciones
 module.exports = {
     ...datos,
-    generarId
+    generarId,
+    sincronizarContadores
 };
