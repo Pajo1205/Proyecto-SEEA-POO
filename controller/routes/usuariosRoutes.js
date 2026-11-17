@@ -1,5 +1,7 @@
 "use strict";
 
+const persistencia = require("../../database/persistencia");
+
 // Rutas de usuarios. Reciben dependencias compartidas del router principal.
 module.exports = function registrarUsuarios(ctx) {
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
@@ -37,6 +39,7 @@ router.post("/usuarios", requiereRol("SEEA"), async (req, res, next) => {
             textoValido(puesto) ? puesto.trim() : "Encargado"
         );
         datos.usuarios.push(usuario);
+        persistencia.guardarUsuario(usuario);
         return res.status(201).json({
             mensaje: "Encargado creado correctamente",
             usuario: usuarioPublico(usuario)
@@ -67,6 +70,7 @@ router.delete("/usuarios/:id", requiereRol("SEEA"), (req, res) => {
                 "Este voluntario tiene asignaciones historicas; no puede eliminarse sin archivar sus relaciones");
     }
     datos.usuarios.splice(datos.usuarios.indexOf(usuario), 1);
+    persistencia.eliminarUsuario(usuario.id);
     return res.json({ mensaje: "Usuario eliminado correctamente" });
 });
 

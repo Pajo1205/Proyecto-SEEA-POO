@@ -1,5 +1,7 @@
 "use strict";
 
+const persistencia = require("../../database/persistencia");
+
 // Rutas de colegios. Reciben dependencias compartidas del router principal.
 module.exports = function registrarColegios(ctx) {
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
@@ -102,6 +104,7 @@ router.post(
             // ==================================
 
             datos.colegios.push(colegio);
+            persistencia.guardarColegio(colegio);
 
             return res.status(201).json({
                 mensaje: "Colegio aliado registrado correctamente",
@@ -254,8 +257,10 @@ router.patch(
         }
 
         // ==================================
-        // RESPUESTA
+        // GUARDAR Y RESPONDER
         // ==================================
+
+        persistencia.guardarColegio(colegio);
 
         return res.status(200).json({
             mensaje: "Colegio actualizado correctamente",
@@ -299,6 +304,8 @@ router.delete(
             datos.colegios.indexOf(colegio),
             1
         );
+
+        persistencia.eliminarColegio(colegio.id);
 
         return res.json({
             mensaje: "Colegio eliminado"

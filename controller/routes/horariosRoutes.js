@@ -1,5 +1,7 @@
 "use strict";
 
+const persistencia = require("../../database/persistencia");
+
 // Rutas de horarios. Reciben dependencias compartidas del router principal.
 module.exports = function registrarHorarios(ctx) {
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
@@ -56,6 +58,7 @@ router.post(
             }
 
             datos.horarios.push(horario);
+            persistencia.guardarHorario(horario);
 
             return res.status(201).json({
                 mensaje: "Horario creado",
@@ -98,6 +101,8 @@ router.delete(
             datos.horarios.indexOf(horario),
             1
         );
+
+        persistencia.eliminarHorario(horario.id);
 
         return res.json({
             mensaje: "Horario eliminado"
