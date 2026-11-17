@@ -3,6 +3,8 @@
 // Rutas de solicitudes. Reciben dependencias compartidas del router principal.
 module.exports = function registrarSolicitudes(ctx) {
     const Transporte = require("../../Modelo/Transporte");
+    const { transaccion } = require("../../database/db");
+    const persistencia = require("../../database/persistencia");
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
 
 // ==========================================
@@ -86,6 +88,7 @@ router.post(
             );
 
             datos.solicitudes.push(solicitud);
+            persistencia.guardarSolicitud(solicitud);
 
             return res.status(201).json({
                 mensaje: "Solicitud enviada a SEEA",
@@ -124,6 +127,11 @@ router.patch(
             );
         }
 
+        transaccion(() => {
+            persistencia.guardarSolicitud(solicitud);
+            persistencia.guardarHorario(solicitud.horario);
+        });
+
         return res.json({
             mensaje: "Solicitud aprobada",
             solicitud: solicitudDTO(solicitud)
@@ -148,6 +156,8 @@ router.patch(
         if (!solicitud.rechazar()) {
             return error(res, 409, "No se puede rechazar");
         }
+
+        persistencia.guardarSolicitud(solicitud);
 
         return res.json({
             mensaje: "Solicitud rechazada",
@@ -197,6 +207,19 @@ router.patch(
         if (visita && visita.estado === "PROGRAMADA") {
             visita.cancelar();
         }
+
+        transaccion(() => {
+            persistencia.guardarSolicitud(solicitud);
+            persistencia.guardarHorario(solicitud.horario);
+
+            if (visita) {
+                persistencia.guardarVisita(visita);
+
+                for (const asignacion of visita.asignaciones) {
+                    persistencia.guardarAsignacion(asignacion);
+                }
+            }
+        });
 
         return res.json({
             mensaje: "Solicitud cancelada",
@@ -250,9 +273,17 @@ router.patch(
             .filter(s => s !== solicitud && s.estaAprobada())
             .map(s => s.horario);
 
+        const horarioAnterior = solicitud.horario;
+
         if (!solicitud.cambiarHorario(nuevoHorario, ocupados)) {
             return error(res, 409, "No se puede reagendar");
         }
+
+        transaccion(() => {
+            persistencia.guardarSolicitud(solicitud);
+            persistencia.guardarHorario(horarioAnterior);
+            persistencia.guardarHorario(solicitud.horario);
+        });
 
         return res.json({
             mensaje: "Horario actualizado",
@@ -291,6 +322,8 @@ router.delete(
             datos.solicitudes.indexOf(solicitud),
             1
         );
+
+        persistencia.eliminarSolicitud(solicitud.id);
 
         return res.json({
             mensaje: "Solicitud eliminada"

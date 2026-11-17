@@ -1,5 +1,7 @@
 "use strict";
 
+const persistencia = require("../../database/persistencia");
+
 // Rutas de voluntarios. Reciben dependencias compartidas del router principal.
 module.exports = function registrarVoluntarios(ctx) {
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
@@ -57,6 +59,11 @@ router.post(
                     "Disponibilidad duplicada"
                 );
             }
+
+            persistencia.guardarDisponibilidad(
+                req.usuario.id,
+                disponibilidad
+            );
 
             return res.status(201).json({
                 mensaje: "Disponibilidad registrada",
@@ -158,6 +165,7 @@ router.post(
         }
 
         datos.asignaciones.push(asignacion);
+        persistencia.guardarAsignacion(asignacion);
 
         return res.status(201).json({
             mensaje: "Asignacion confirmada",
@@ -199,6 +207,8 @@ router.patch(
                 "No se puede cancelar"
             );
         }
+
+        persistencia.guardarAsignacion(asignacion);
 
         return res.json({
             mensaje: "Asignacion cancelada",

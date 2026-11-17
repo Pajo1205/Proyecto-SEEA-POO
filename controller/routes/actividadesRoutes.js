@@ -1,5 +1,7 @@
 "use strict";
 
+const persistencia = require("../../database/persistencia");
+
 // Rutas de actividades. Reciben dependencias compartidas del router principal.
 module.exports = function registrarActividades(ctx) {
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
@@ -37,6 +39,7 @@ router.post(
             );
 
             datos.actividades.push(actividad);
+            persistencia.guardarActividad(actividad);
 
             return res.status(201).json({
                 mensaje: "Actividad registrada",
@@ -109,6 +112,11 @@ router.post(
                 "Actividad duplicada o visita cerrada"
             );
         }
+
+        persistencia.agregarActividadVisita(
+            visita.id,
+            actividad.id
+        );
 
         return res.json({
             mensaje: "Actividad agregada",

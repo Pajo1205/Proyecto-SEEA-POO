@@ -1,5 +1,7 @@
 "use strict";
 
+const persistencia = require("../../database/persistencia");
+
 // Rutas de visitas. Reciben dependencias compartidas del router principal.
 module.exports = function registrarVisitas(ctx) {
     const { router, datos, bcrypt, Colegio, Horario, Solicitud, Visita, Actividad, UsuarioColegio, EncargadoSEEA, Voluntario, DisponibilidadVoluntario, AsignacionVoluntario, error, buscarPorId, textoValido, correoValido, usuarioPublico, colegioDTO, horarioDTO, solicitudDTO, actividadDTO, asignacionDTO, visitaDTO, requiereSesion, requiereRol } = ctx;
@@ -62,6 +64,7 @@ router.post(
         );
 
         datos.visitas.push(visita);
+        persistencia.guardarVisita(visita);
 
         return res.status(201).json({
             mensaje: "Visita programada",
@@ -88,6 +91,8 @@ router.patch(
             return error(res, 409, "Estado incompatible");
         }
 
+        persistencia.guardarVisita(visita);
+
         return res.json({
             mensaje: "Visita iniciada",
             visita: visitaDTO(visita)
@@ -112,6 +117,8 @@ router.patch(
         if (!visita.finalizar()) {
             return error(res, 409, "Estado incompatible");
         }
+
+        persistencia.guardarVisita(visita);
 
         return res.json({
             mensaje: "Visita finalizada",
